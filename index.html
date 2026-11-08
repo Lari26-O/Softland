@@ -199,7 +199,7 @@ const app = $('#app');
 const STORE = 'softland:v1';
 const DEFAULTS = {
   profile: null, // {name, type:'kid'|'adult', sleepHours, arrival:'17:00'}
-  settings: { apiKey: '', model: 'gemini-flash-latest', voiceReplies: false, theme: 'auto', nudges: false,
+  settings: { apiKey: '', serverUrl: '', model: 'gemini-flash-latest', voiceReplies: false, theme: 'auto', nudges: false,
     buddy: { on: false, name: '' }, parent: { on: false } },
   checkins: [],       // {t, energy, moods[], note, reply}
   rituals: {},        // {dayKey: true}
@@ -338,18 +338,44 @@ function contextLine() {
   return s;
 }
 class AIError extends Error {}
+/* Shared Softland AI server (Cloudflare Worker in /server). It holds the keys and
+   falls back Gemini -> Groq -> OpenRouter, so nobody needs their own key.
+   Paste the Worker's URL here once it's deployed. */
+const AI_SERVER = '';
+const serverUrl = () => (S.settings.serverUrl || AI_SERVER || '').trim().replace(/\/+$/, '');
+const parseJson = text => {
+  try { return JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, '')); }
+  catch { const m = text.match(/\{[\s\S]*\}/); if (m) { try { return JSON.parse(m[0]); } catch {} } throw new AIError('Got a jumbled reply. Try again?'); }
+};
 async function ai({ prompt, history, json = false, task = '' }) {
+  const system = persona() + '\n' + contextLine() + (task ? '\nTask: ' + task : '');
+  const messages = history ? history.map(m => ({ role: m.role === 'ai' ? 'ai' : 'user', text: m.text })) : [{ role: 'user', text: prompt }];
   const key = S.settings.apiKey?.trim();
-  if (!key) throw new AIError('nokey');
-  const contents = history
-    ? history.map(m => ({ role: m.role === 'ai' ? 'model' : 'user', parts: [{ text: m.text }] }))
-    : [{ role: 'user', parts: [{ text: prompt }] }];
+  const server = serverUrl();
+  if (!key && !server) throw new AIError('nokey');
+  let text;
+  if (key) {
+    try { text = await geminiDirect(key, system, messages, json); }
+    catch (e) { if (!server || e.final) throw e; } // own key failed (limit/busy) -> use the shared server
+  }
+  if (text === undefined) text = await viaServer(server, system, messages, json);
+  return json ? parseJson(text) : text;
+}
+async function viaServer(server, system, messages, json) {
+  let res;
+  try { res = await fetch(server, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system, messages, json }) }); }
+  catch { throw new AIError('Could not reach Moss. Check your internet connection.'); }
+  let data = {}; try { data = await res.json(); } catch {}
+  if (!res.ok || !data.text) throw new AIError(data.error || `Moss is having trouble right now (error ${res.status}). Try again in a minute.`);
+  return data.text;
+}
+async function geminiDirect(key, system, messages, json) {
   const body = {
-    systemInstruction: { parts: [{ text: persona() + '\n' + contextLine() + (task ? '\nTask: ' + task : '') }] },
-    contents,
+    systemInstruction: { parts: [{ text: system }] },
+    contents: messages.map(m => ({ role: m.role === 'ai' ? 'model' : 'user', parts: [{ text: m.text }] })),
     generationConfig: { temperature: 0.85, ...(json ? { responseMimeType: 'application/json' } : {}) }
   };
-  const models = [...new Set([S.settings.model || 'gemini-flash-latest', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.0-flash'])];
+  const models = [...new Set([S.settings.model || 'gemini-flash-latest', 'gemini-flash-latest', 'gemini-2.5-flash'])];
   let lastErr;
   for (const model of models) {
     let res;
@@ -362,21 +388,19 @@ async function ai({ prompt, history, json = false, task = '' }) {
     if (!res.ok) {
       let msg = ''; try { msg = (await res.json()).error?.message || ''; } catch {}
       if (res.status === 429) throw new AIError('The free Gemini limit was reached for now. Give it a minute and try again.');
-      if (/api key/i.test(msg) || res.status === 401 || res.status === 403) throw new AIError('Your Gemini API key doesn\'t seem to work. Check it in Settings.');
+      if (/api key/i.test(msg) || res.status === 401 || res.status === 403) throw new AIError('Your Gemini API key doesn\'t seem to work. Check it in Settings, or remove it to use Softland\'s shared AI.');
       if (res.status >= 500) { lastErr = new AIError('Gemini is busy right now. Try again in a moment.'); continue; }
-      throw new AIError(msg || `Gemini error ${res.status}`);
+      const e = new AIError(msg || `Gemini error ${res.status}`); e.final = true; throw e;
     }
     const data = await res.json();
     const text = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
     if (!text) throw new AIError('Gemini sent an empty reply. Try again?');
-    if (!json) return text;
-    try { return JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, '')); }
-    catch { throw new AIError('Got a jumbled reply. Try again?'); }
+    return text;
   }
   throw lastErr || new AIError('Something went wrong.');
 }
 function aiErrorHtml(e) {
-  if (e.message === 'nokey') return `<p>Moss needs a free Gemini key to give personal replies. <a href="#settings">Add one in Settings</a> — it takes a minute.</p>`;
+  if (e.message === 'nokey') return `<p>Moss isn't connected to an AI yet. <a href="#settings">Add a free Gemini key in Settings</a> — it takes a minute.</p>`;
   return `<p>😕 ${esc(e.message)}</p>`;
 }
 const thinking = (txt = 'Moss is thinking') => `<div class="ai-tag">🌿 Moss</div><p class="muted dots">${txt}</p>`;
@@ -514,16 +538,16 @@ views.onboard = () => {
     <label class="lbl">Which sounds more like you?</label>
     <div class="type-pick"><button data-type="kid"><span>🎒</span><b>Student</b><br><small class="muted">coming home from school</small></button>
     <button data-type="adult"><span>💼</span><b>Adult</b><br><small class="muted">coming home from work</small></button></div></div>
-    <div class="card"><h3>Connect the AI (free)</h3>
-    <p class="small muted">Softland uses Google's Gemini. Get a free API key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> (sign in with Google → "Create API key") and paste it here. It stays only on this device.</p>
+    ${serverUrl() ? '' : `<div class="card"><h3>Connect the AI (free)</h3>
+    <p class="small muted">Softland uses Google's Gemini. Get a free API key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> and paste it here. It stays only on this device.</p>
     <input type="password" id="okey" placeholder="Paste your Gemini API key (optional for now)" autocomplete="off">
-    <p class="small muted">You can skip this and add it later in Settings — the app still works with simple built-in suggestions.</p></div>
+    <p class="small muted">You can skip this and add it later in Settings.</p></div>`}
     <button class="btn block" id="ogo" disabled>Let's land 🌿</button></div>`;
   const check = () => $('#ogo').disabled = !type;
   $$('[data-type]').forEach(b => b.onclick = () => { type = b.dataset.type; $$('[data-type]').forEach(x => x.classList.toggle('on', x === b)); check(); });
   $('#ogo').onclick = () => {
     S.profile = { name: $('#oname').value.trim(), type, sleepHours: type === 'kid' ? 9 : 8, arrival: type === 'kid' ? '15:30' : '17:30' };
-    S.settings.apiKey = $('#okey').value.trim();
+    S.settings.apiKey = $('#okey')?.value.trim() || '';
     save(); location.hash = '#home'; route();
   };
 };
@@ -588,7 +612,7 @@ views.home = () => {
     }
     entry.reply = reply; save();
     box.innerHTML = support + `<div class="card soft"><div class="ai-tag">🌿 Moss</div><div class="reply">${md(reply)}</div>
-      ${!S.settings.apiKey ? '<p class="small muted">Built-in suggestion. <a href="#settings">Add a free Gemini key</a> for personal replies.</p>' : ''}
+      ${!S.settings.apiKey && !serverUrl() ? '<p class="small muted">Built-in suggestion. <a href="#settings">Add a free Gemini key</a> for personal replies.</p>' : ''}
       <div class="row" style="margin-top:8px"><a class="btn sm" href="#today">See today's compass →</a>${S.settings.buddy.on ? '<button class="btn sm quiet" id="buddy">Send buddy check-in</button>' : ''}</div></div>`;
     $('#land').disabled = false;
     $('#buddy') && ($('#buddy').onclick = shareBuddy);
@@ -1186,12 +1210,15 @@ views.settings = () => {
       <label class="lbl">Account type</label><div class="chips"><button class="chip ${p.type === 'kid' ? 'on' : ''}" data-t="kid">🎒 Student (School mode)</button><button class="chip ${p.type === 'adult' ? 'on' : ''}" data-t="adult">💼 Adult (Work mode)</button></div>
       <div class="grid2"><div><label class="lbl" for="sarr">Usual arrival home</label><input type="time" id="sarr" value="${esc(p.arrival || '')}"></div>
       <div><label class="lbl" for="ssl">Sleep you need</label><select id="ssl">${[7, 7.5, 8, 8.5, 9, 9.5, 10].map(h => `<option ${+p.sleepHours === h ? 'selected' : ''} value="${h}">${h} h</option>`).join('')}</select></div></div></div>
-    <div class="card"><h2>AI (Google Gemini)</h2>
-      <p class="small muted">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. It's stored only in this browser and sent only to Google. Note: on Google's free tier, Google may use prompts to improve its products — so avoid writing anything you'd never want anyone to read.</p>
-      <label class="lbl" for="skey">API key</label><div class="row" style="flex-wrap:nowrap"><input type="password" id="skey" value="${esc(st.apiKey)}" autocomplete="off" placeholder="AIza…"><button class="iconbtn" id="eye" aria-label="Show key">👁️</button></div>
+    <div class="card"><h2>AI</h2>
+      ${AI_SERVER ? '<p class="small">✅ Moss works for everyone through Softland\'s shared AI (Gemini, with Groq and OpenRouter as backups). You don\'t need to do anything here.</p>' : ''}
+      <details ${AI_SERVER ? '' : 'open'}><summary class="small" style="font-weight:700;cursor:pointer">${AI_SERVER ? 'Advanced: use my own Gemini key' : 'Gemini key'}</summary>
+      <p class="small muted">Optional. Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. It's stored only in this browser and sent only to Google. On Google's free tier, Google may use prompts to improve its products.</p>
+      <label class="lbl" for="skey">API key</label><div class="row" style="flex-wrap:nowrap"><input type="password" id="skey" value="${esc(st.apiKey)}" autocomplete="off" placeholder="Paste key"><button class="iconbtn" id="eye" aria-label="Show key">👁️</button></div>
       <label class="lbl" for="smodel">Model</label><input type="text" id="smodel" value="${esc(st.model)}" placeholder="gemini-flash-latest">
-      <p class="small muted">Leave as <code>gemini-flash-latest</code> unless you know you want another one.</p>
-      <button class="btn sm quiet" id="test">Test connection</button> <span id="tres" class="small"></span></div>
+      <label class="lbl" for="ssrv">Softland AI server</label><input type="text" id="ssrv" value="${esc(st.serverUrl || '')}" placeholder="${esc(AI_SERVER || 'https://….workers.dev')}">
+      </details>
+      <button class="btn sm quiet" id="test" style="margin-top:12px">Test connection</button> <span id="tres" class="small"></span></div>
     <div class="card"><h2>Comfort</h2>
       <label class="switch"><span>🔊 Read Moss's replies out loud</span><input type="checkbox" id="svoice" ${st.voiceReplies ? 'checked' : ''}></label>
       <label class="switch"><span>🔔 Soft reminders<br><small class="muted">"How are you?" at arrival time, and a screens-off nudge. Works while Softland is open or installed.</small></span><input type="checkbox" id="snudge" ${st.nudges ? 'checked' : ''}></label>
@@ -1207,7 +1234,7 @@ views.settings = () => {
     <p class="small muted center">Softland · a soft landing after a hard day 🌿</p></div>`;
   const persist = () => {
     p.name = $('#sname').value.trim(); p.arrival = $('#sarr').value; p.sleepHours = +$('#ssl').value;
-    st.apiKey = $('#skey').value.trim(); st.model = $('#smodel').value.trim() || 'gemini-flash-latest';
+    st.apiKey = $('#skey').value.trim(); st.serverUrl = $('#ssrv').value.trim(); st.model = $('#smodel').value.trim() || 'gemini-flash-latest';
     st.voiceReplies = $('#svoice').checked; st.buddy.on = $('#sbuddy').checked; st.buddy.name = $('#sbn').value.trim();
     if ($('#sparent')) st.parent.on = $('#sparent').checked;
     save();
@@ -1226,7 +1253,7 @@ views.settings = () => {
   $('#test').onclick = async () => {
     persist(); $('#tres').textContent = 'Testing…';
     try { const r = await ai({ prompt: 'Say hi in five words or fewer.' }); $('#tres').textContent = '✅ Working! Moss says: ' + r; }
-    catch (e) { $('#tres').textContent = e.message === 'nokey' ? 'Paste a key first.' : '❌ ' + e.message; }
+    catch (e) { $('#tres').textContent = e.message === 'nokey' ? 'No AI connected yet.' : '❌ ' + e.message; }
   };
   $('#exp').onclick = () => { const a = document.createElement('a'); const data = { ...S, settings: { ...S.settings, apiKey: '' } };
     a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })); a.download = `softland-${dayKey()}.json`; a.click(); };

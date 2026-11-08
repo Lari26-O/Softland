@@ -2,24 +2,18 @@
 
 A soft landing after a hard day: a gentle planner and AI companion for students and adults. It's a calm web app for the hour after school or work: a week planner, an energy check-in, 1–3 priorities for today, an energy-aware plan for tomorrow with sleep-back timing, a gratitude journal, 15-minute creative tasters, a study/work helper, and an Overwhelm button.
 
-## The AI: Google Gemini (free)
+## The AI: shared server with backups
 
-Softland's companion ("Moss") runs on **Google Gemini** with your own free API key:
+Everyone uses Softland's AI ("Moss") through a small free server in [`server/`](server/), a Cloudflare Worker. It keeps the API keys secret and falls back **Gemini → Groq → OpenRouter** if one is busy or out of free quota. Setup steps are in [`server/README.md`](server/README.md).
 
-1. Go to **https://aistudio.google.com/apikey** and sign in with a Google account.
-2. Click **Create API key** and copy it.
-3. Open Softland, then go to **More → Settings → AI** and paste the key. Tap **Test connection**.
-
-The key is saved only in your browser (localStorage), and the app sends it only to Google's API. Without a key the app still works, using simple built-in suggestions.
-
-> On Google's free tier, Google may use prompts to improve its products. Keep that in mind for very private journal entries.
+People can still add their own Gemini key under **More → Settings → AI** (optional). If that key hits its limit, the app falls back to the shared server. With no AI connected at all, the app still works with simple built-in suggestions.
 
 ## Running it
 
 It's one static `index.html`, with no build step.
 
 - **Locally:** run `python3 -m http.server` inside this folder and open http://localhost:8000
-- **Online:** any static host works (GitHub Pages, Netlify, Vercel). With GitHub Pages turned on for this repo, it's at `https://<user>.github.io/softland/`
+- **Online:** any static host works (GitHub Pages, Netlify, Vercel). With GitHub Pages turned on for this repo, it's at `https://lari26-o.github.io/Softland/`
 - **On your phone:** open the URL, then use "Add to Home Screen" to install it like an app.
 
 ## What's in it
