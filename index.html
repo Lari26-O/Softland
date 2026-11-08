@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F5F2EC">
+<meta name="description" content="A soft landing after a hard day: a gentle planner and AI companion for students and adults.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Softland">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Softland</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+:root{
+  --bg:#F5F2EC; --card:#FFFFFF; --ink:#22343A; --muted:#6C7C80; --line:#E6E1D8;
+  --brand:#2C7A70; --brand-ink:#FFFFFF; --brand-soft:#E2EFEB;
+  --peach:#F3B88F; --peach-soft:#FBEADD; --lilac:#B9A8E0; --lilac-soft:#EEE9F8;
+  --sun:#F2CF6B; --rose:#E59A9A;
+  --shadow:0 2px 14px rgba(34,52,58,.07);
+  --r:22px; --nav:76px;
+  --display:'Fraunces',Georgia,serif;
+  --body:'Nunito',system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131B1D; --card:#1C272A; --ink:#E7EEEC; --muted:#93A3A5; --line:#2A383B;
+    --brand:#5FB8A9; --brand-ink:#0F1A1B; --brand-soft:#21383A;
+    --peach-soft:#3A2C24; --lilac-soft:#2B2740; --shadow:0 2px 14px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131B1D; --card:#1C272A; --ink:#E7EEEC; --muted:#93A3A5; --line:#2A383B;
+  --brand:#5FB8A9; --brand-ink:#0F1A1B; --brand-soft:#21383A;
+  --peach-soft:#3A2C24; --lilac-soft:#2B2740; --shadow:0 2px 14px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--brand)}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.2;margin:0 0 .4em}
+h1{font-size:1.75rem} h2{font-size:1.3rem} h3{font-size:1.08rem}
+p{margin:.3em 0 .7em}
+.wrap{max-width:640px;margin:0 auto;padding:18px 16px calc(var(--nav) + 90px)}
+.muted{color:var(--muted)} .small{font-size:.88rem}
+.card{background:var(--card);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);margin:0 0 14px;border:1px solid var(--line)}
+.card.soft{background:var(--brand-soft);border-color:transparent}
+.card.peach{background:var(--peach-soft);border-color:transparent}
+.card.lilac{background:var(--lilac-soft);border-color:transparent}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:12px 20px;border-radius:999px;border:0;background:var(--brand);color:var(--brand-ink);font-weight:700;font-size:1rem;transition:transform .1s,opacity .2s}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.ghost{background:transparent;color:var(--brand);border:2px solid var(--brand)}
+.btn.quiet{background:var(--brand-soft);color:var(--ink)}
+.btn.block{width:100%}
+.btn.sm{min-height:40px;padding:8px 14px;font-size:.92rem}
+.iconbtn{width:46px;height:46px;border-radius:50%;border:0;background:var(--brand-soft);display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem;flex:none}
+.iconbtn.on{background:var(--rose);color:#fff;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.6}}
+textarea,input[type=text],input[type=password],input[type=time],input[type=number],select{width:100%;border:1.5px solid var(--line);background:var(--card);border-radius:16px;padding:13px 14px;outline:none;font-size:1rem}
+textarea{min-height:92px;resize:vertical}
+textarea:focus,input:focus,select:focus{border-color:var(--brand)}
+label.lbl{display:block;font-weight:700;margin:12px 0 6px;font-size:.95rem}
+.inputmic{position:relative}
+.inputmic textarea{padding-right:60px}
+.inputmic .iconbtn{position:absolute;right:8px;bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:42px;padding:8px 15px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);font-weight:600;font-size:.95rem}
+.chip.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.energy{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.energy button{border:1.5px solid var(--line);background:var(--card);border-radius:18px;padding:12px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.78rem;font-weight:700;color:var(--muted);min-height:78px}
+.energy button span{font-size:1.65rem}
+.energy button.on{border-color:var(--brand);background:var(--brand-soft);color:var(--ink)}
+.reply{white-space:normal}
+.reply p:first-child{margin-top:0}
+.reply ul{margin:.3em 0 .7em;padding-left:1.2em}
+.ai-tag{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:800;color:var(--brand);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.dots::after{content:'';animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;text-align:left;box-shadow:var(--shadow);min-height:104px;display:flex;flex-direction:column;justify-content:space-between}
+.tile b{font-size:1rem}
+.tile .em{font-size:1.6rem}
+.tile small{color:var(--muted);font-size:.84rem;line-height:1.3}
+/* nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;height:calc(var(--nav) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:20}
+nav.tabs .in{display:flex;max-width:640px;width:100%}
+nav.tabs button{flex:1;min-width:0;padding:0 2px;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.7rem;font-weight:700;color:var(--muted);white-space:nowrap}
+nav.tabs button span{font-size:1.35rem}
+nav.tabs button.on{color:var(--brand)}
+.fab{position:fixed;right:16px;bottom:calc(var(--nav) + 16px + env(safe-area-inset-bottom));z-index:21;border:0;border-radius:999px;padding:12px 18px;min-height:50px;background:var(--lilac);color:#231C3A;font-weight:800;box-shadow:0 6px 20px rgba(60,40,110,.25)}
+/* lists */
+.item{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.check{width:30px;height:30px;border-radius:50%;border:2px solid var(--brand);background:none;flex:none;display:flex;align-items:center;justify-content:center;color:var(--brand-ink);font-size:.9rem}
+.check.on{background:var(--brand)}
+.done-txt{text-decoration:line-through;color:var(--muted)}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;background:var(--brand-soft);font-size:.78rem;font-weight:700}
+.block-row{display:flex;gap:10px;align-items:center;padding:10px;border-radius:16px;background:var(--bg);margin-bottom:8px;border:1px solid var(--line)}
+.block-row input[type=time]{width:136px;padding:8px 10px;flex:none}
+.block-row .lab{flex:1;min-width:0}
+.block-row .mini{border:0;background:none;font-size:1.05rem;padding:6px;color:var(--muted);min-width:34px;min-height:40px}
+.block-row.dragging{opacity:.4}
+.e-high{border-left:5px solid var(--sun)} .e-med{border-left:5px solid var(--peach)} .e-low{border-left:5px solid var(--lilac)}
+.bigtime{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.bigtime div{background:var(--card);border-radius:16px;padding:10px 4px;border:1px solid var(--line)}
+.bigtime b{display:block;font-family:var(--display);font-size:1.35rem}
+.bigtime small{color:var(--muted);font-size:.8rem;font-weight:700}
+/* overlay */
+.overlay{position:fixed;inset:0;background:var(--bg);z-index:50;overflow:auto;animation:fade .3s}
+.overlay .wrap{padding-bottom:40px}
+@keyframes fade{from{opacity:0}}
+.sheet-bg{position:fixed;inset:0;background:rgba(10,20,22,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center;animation:fade .2s}
+.sheet{background:var(--card);width:100%;max-width:640px;border-radius:26px 26px 0 0;padding:22px 18px calc(24px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
+.breath{width:190px;height:190px;margin:26px auto;border-radius:50%;background:radial-gradient(circle,var(--brand-soft) 0%,var(--brand) 140%);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--ink);animation:breathe 10s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(.62)}40%{transform:scale(1)}}
+.timer{font-family:var(--display);font-size:3.4rem;text-align:center;margin:10px 0}
+.center{text-align:center}
+.support{background:var(--peach-soft);border:2px solid var(--peach);border-radius:var(--r);padding:16px;margin:0 0 14px}
+.bars{display:flex;align-items:flex-end;gap:10px;height:120px;margin:10px 0 4px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px}
+.bars i{display:block;width:100%;border-radius:10px 10px 4px 4px;background:var(--brand);min-height:4px}
+.bars small{font-size:.74rem;color:var(--muted);font-weight:700}
+.jar{width:150px;height:170px;margin:6px auto 12px;border:4px solid var(--line);border-top-width:10px;border-radius:24px 24px 40px 40px;position:relative;overflow:hidden;background:var(--card)}
+.jar .fill{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(var(--sun),var(--peach));opacity:.75;transition:height .6s}
+.jar .count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:2rem;font-weight:600}
+.photo{max-width:100%;border-radius:16px;margin-top:8px;display:block}
+.chat .msg{padding:10px 14px;border-radius:18px;margin:8px 0;max-width:88%}
+.chat .me{background:var(--brand-soft);margin-left:auto}
+.chat .ai{background:var(--bg);border:1px solid var(--line)}
+.step-dot{display:flex;gap:6px;justify-content:center;margin:8px 0}
+.step-dot i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.step-dot i.on{background:var(--brand)}
+.toast{position:fixed;left:50%;bottom:calc(var(--nav) + 80px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;z-index:60;font-weight:700;font-size:.92rem;animation:fade .2s;max-width:90vw;text-align:center}
+.switch{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0}
+.switch input{width:52px;height:30px;appearance:none;background:var(--line);border-radius:999px;position:relative;flex:none;cursor:pointer;transition:background .2s}
+.switch input::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s}
+.switch input:checked{background:var(--brand)}
+.switch input:checked::after{left:25px}
+input[type=date]{width:100%;border:1.5px solid var(--line);background:var(--card);border-radius:16px;padding:12px 14px;outline:none;font-size:1rem}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:12px}
+.week button{border:1.5px solid var(--line);background:var(--card);border-radius:16px;padding:8px 0 4px;display:flex;flex-direction:column;align-items:center;min-height:68px;min-width:0}
+.week button small{font-size:.72rem;color:var(--muted);font-weight:700}
+.week button b{font-size:1.1rem}
+.week button i{font-style:normal;color:var(--brand);font-size:.8rem;line-height:1;letter-spacing:1px}
+.week button.today{border-color:var(--peach)}
+.week button.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.week button.on small,.week button.on i{color:var(--brand-ink)}
+.mini-btn{border:0;background:var(--brand-soft);border-radius:50%;width:40px;height:40px;flex:none;font-size:1rem}
+hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+.header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.back{border:0;background:none;color:var(--brand);font-weight:700;padding:8px 0;min-height:44px}
+.type-pick{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.type-pick button{border:2px solid var(--line);background:var(--card);border-radius:var(--r);padding:18px 12px;text-align:center;min-height:130px}
+.type-pick button.on{border-color:var(--brand);background:var(--brand-soft)}
+.type-pick span{font-size:2.2rem;display:block}
+@media (max-width:380px){ .energy button{font-size:.7rem} .tiles{gap:9px} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav class="tabs" id="tabs" hidden><div class="in">
+  <button data-go="home"><span>🏡</span>Land</button>
+  <button data-go="today"><span>🧭</span>Today</button>
+  <button data-go="planner"><span>🗓️</span>Planner</button>
+  <button data-go="tomorrow"><span>🌅</span>Tomorrow</button>
+  <button data-go="journal"><span>📓</span>Journal</button>
+  <button data-go="more"><span>✨</span>More</button>
+</div></nav>
+<button class="fab" id="fab" hidden>🫧 Too much</button>
+
+<script>
+'use strict';
+/* ============================================================
+   Softland — single-file web app.
+   AI: Google Gemini API, using the user's own (free) API key.
+   All data stays in this browser's localStorage.
+   ============================================================ */
+
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dayKey = (d = new Date()) => d.toLocaleDateString('en-CA');
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const app = $('#app');
+
+/* ---------------- state ---------------- */
+const STORE = 'softland:v1';
+const DEFAULTS = {
+  profile: null, // {name, type:'kid'|'adult', sleepHours, arrival:'17:00'}
+  settings: { apiKey: '', model: 'gemini-flash-latest', voiceReplies: false, theme: 'auto', nudges: false,
+    buddy: { on: false, name: '' }, parent: { on: false } },
+  checkins: [],       // {t, energy, moods[], note, reply}
+  rituals: {},        // {dayKey: true}
+  days: {},           // {dayKey: {items:[{id,text,priority,minutes,why,done}], note}}
+  plans: {},          // {dayKey(target day): {goal, wake, bed, screensOff, tonight[], blocks[], note}}
+  journal: [],        // {id,t,prompt,text,photo,chat[],gratitude:bool}
+  explore: { likes: [], history: [], current: [] }, // history:{t,name,feel}
+  focus: { last: null },
+  lookbacks: [],      // {t, text}
+  planner: [],        // {id,title,date,time,cat,done}
+  fired: {}           // reminders fired {kind+day:true}
+};
+let S = load();
+function load() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (!raw) return structuredClone(DEFAULTS);
+    const s = Object.assign(structuredClone(DEFAULTS), raw);
+    s.settings = Object.assign(structuredClone(DEFAULTS.settings), raw.settings || {});
+    s.planner = Array.isArray(raw.planner) ? raw.planner : [];
+    s.explore = Object.assign(structuredClone(DEFAULTS.explore), raw.explore || {});
+    return s;
+  } catch { return structuredClone(DEFAULTS); }
+}
+function save() {
+  try { localStorage.setItem(STORE, JSON.stringify(S)); }
+  catch (e) { toast('Storage is full — try removing some journal photos.'); }
+}
+const isKid = () => S.profile?.type === 'kid';
+const lastCheckin = () => S.checkins[S.checkins.length - 1];
+const todaysCheckin = () => { const c = lastCheckin(); return c && dayKey(new Date(c.t)) === dayKey() ? c : null; };
+const day = (k = dayKey()) => (S.days[k] ||= { items: [], note: '' });
+
+function applyTheme() {
+  const t = S.settings.theme;
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+}
+applyTheme();
+
+/* ---------------- small UI helpers ---------------- */
+function toast(msg, ms = 2600) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), ms);
+}
+function md(text) {
+  // tiny, safe markdown: **bold**, *italics*, bullet lists, paragraphs
+  const lines = esc(text).split(/\n/);
+  let out = '', inList = false;
+  for (let l of lines) {
+    l = l.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*([^*]+)\*/g, '$1<i>$2</i>');
+    const m = l.match(/^\s*(?:[-*•]|\d+[.)])\s+(.*)/);
+    if (m) { if (!inList) { out += '<ul>'; inList = true; } out += `<li>${m[1]}</li>`; continue; }
+    if (inList) { out += '</ul>'; inList = false; }
+    if (l.trim()) out += `<p>${l.replace(/^#+\s*/, '')}</p>`;
+  }
+  if (inList) out += '</ul>';
+  return out;
+}
+function sheet(html, onMount) {
+  const bg = document.createElement('div'); bg.className = 'sheet-bg';
+  bg.innerHTML = `<div class="sheet" role="dialog">${html}</div>`;
+  bg.addEventListener('click', e => { if (e.target === bg) close(); });
+  document.body.appendChild(bg);
+  function close() { bg.remove(); }
+  onMount?.(bg.firstElementChild, close);
+  return close;
+}
+function fmt12(hhmm) {
+  if (!hhmm || !/^\d{1,2}:\d{2}$/.test(hhmm)) return hhmm || '';
+  let [h, m] = hhmm.split(':').map(Number); const ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12;
+  return `${h}:${String(m).padStart(2, '0')} ${ap}`;
+}
+const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+const fromMin = n => { n = ((n % 1440) + 1440) % 1440; return `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`; };
+function greeting() {
+  const h = new Date().getHours();
+  return h < 5 ? 'Still up' : h < 12 ? 'Good morning' : h < 17 ? 'Hey there' : h < 21 ? 'Welcome home' : 'Evening';
+}
+
+/* ---------------- voice (Web Speech API) ---------------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function micBtn(id) { return SR ? `<button class="iconbtn" type="button" data-mic="${id}" aria-label="Speak instead of typing">🎙️</button>` : ''; }
+function bindMics(root = app) {
+  $$('[data-mic]', root).forEach(b => b.onclick = () => {
+    const field = document.getElementById(b.dataset.mic);
+    if (b.classList.contains('on')) { b._rec?.stop(); return; }
+    const rec = new SR(); rec.lang = navigator.language || 'en-US'; rec.interimResults = true; rec.continuous = true;
+    const base = field.value ? field.value.trim() + ' ' : '';
+    rec.onresult = e => { field.value = base + [...e.results].map(r => r[0].transcript).join(''); };
+    rec.onend = () => b.classList.remove('on');
+    rec.onerror = () => { b.classList.remove('on'); toast('Microphone not available'); };
+    b._rec = rec; b.classList.add('on'); rec.start();
+  });
+}
+function speak(text) {
+  if (!S.settings.voiceReplies || !('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text.replace(/[*#_`]/g, '')); u.rate = 0.95; u.pitch = 1.02;
+  speechSynthesis.speak(u);
+}
+
+/* ---------------- safety ---------------- */
+const DISTRESS = /(suicid|kill myself|killing myself|end my life|want to die|wanna die|don'?t want to (be alive|live)|self[- ]?harm|hurt(ing)? myself|cut(ting)? myself|no reason to live|end it all|better off dead)/i;
+function supportCard() {
+  return `<div class="support"><h3>You matter 💛</h3>
+  <p>It sounds like things are really heavy right now. You don't have to carry this alone.</p>
+  ${isKid() ? '<p><b>Please tell a parent, teacher, school counselor or another adult you trust today.</b></p>' : '<p>Reaching out to someone you trust, or a professional, can really help.</p>'}
+  <p class="small">If you might be in danger, call your local emergency number now.<br>
+  US: call or text <b>988</b> · UK &amp; Ireland: Samaritans <b>116 123</b> · Canada: <b>988</b> · Australia: Lifeline <b>13 11 14</b><br>
+  Anywhere else: <a href="https://findahelpline.com" target="_blank" rel="noopener">findahelpline.com</a></p></div>`;
+}
+const needsSupport = (...texts) => texts.some(t => t && DISTRESS.test(t));
+
+/* ---------------- AI (Google Gemini) ---------------- */
+function persona() {
+  const p = S.profile || {};
+  const who = isKid()
+    ? `The user is a student/kid${p.name ? ' named ' + p.name : ''} coming home from school. Use simple, short words a 10-15 year old understands. School mode: think homework, tests, classes, after-school energy.`
+    : `The user is an adult${p.name ? ' named ' + p.name : ''} coming home from work. Work mode: think workday stress, chores, evenings, switching off from work.`;
+  return `You are Moss, the friendly companion inside Softland, an app that gives people a soft landing after school or work.
+${who}
+Personality: a warm, casual friend. Never clinical, never bossy, never preachy.
+Rules you always follow:
+- Everything is a gentle suggestion, never a command. Use phrases like "maybe", "if you feel like it", "you could".
+- No guilt, no streaks, no pressure, no strict schedules. Doing less is always okay.
+- Meet the user at their current energy level.
+- Keep it short and easy to read for a tired person.
+- You are not a therapist and never diagnose. If the user seems to be in real distress or danger, gently and clearly encourage them to reach out to a trusted person${isKid() ? ' (a parent, teacher, or school counselor)' : ''} or a crisis line (like calling or texting 988 in the US), and keep the reply calm and caring.`;
+}
+function contextLine() {
+  const c = todaysCheckin();
+  const now = new Date();
+  let s = `Current local time: ${now.toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' })}.`;
+  if (c) s += ` Today's check-in: energy ${c.energy}/5${c.moods?.length ? ', feeling ' + c.moods.join(', ') : ''}${c.note ? ', said: "' + c.note + '"' : ''}.`;
+  return s;
+}
+class AIError extends Error {}
+async function ai({ prompt, history, json = false, task = '' }) {
+  const key = S.settings.apiKey?.trim();
+  if (!key) throw new AIError('nokey');
+  const contents = history
+    ? history.map(m => ({ role: m.role === 'ai' ? 'model' : 'user', parts: [{ text: m.text }] }))
+    : [{ role: 'user', parts: [{ text: prompt }] }];
+  const body = {
+    systemInstruction: { parts: [{ text: persona() + '\n' + contextLine() + (task ? '\nTask: ' + task : '') }] },
+    contents,
+    generationConfig: { temperature: 0.85, ...(json ? { responseMimeType: 'application/json' } : {}) }
+  };
+  const models = [...new Set([S.settings.model || 'gemini-flash-latest', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.0-flash'])];
+  let lastErr;
+  for (const model of models) {
+    let res;
+    try {
+      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body)
+      });
+    } catch { throw new AIError('Could not reach Gemini. Check your internet connection.'); }
+    if (res.status === 404) { lastErr = new AIError(`Model "${model}" not found.`); continue; }
+    if (!res.ok) {
+      let msg = ''; try { msg = (await res.json()).error?.message || ''; } catch {}
+      if (res.status === 429) throw new AIError('The free Gemini limit was reached for now. Give it a minute and try again.');
+      if (/api key/i.test(msg) || res.status === 401 || res.status === 403) throw new AIError('Your Gemini API key doesn\'t seem to work. Check it in Settings.');
+      if (res.status >= 500) { lastErr = new AIError('Gemini is busy right now. Try again in a moment.'); continue; }
+      throw new AIError(msg || `Gemini error ${res.status}`);
+    }
+    const data = await res.json();
+    const text = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
+    if (!text) throw new AIError('Gemini sent an empty reply. Try again?');
+    if (!json) return text;
+    try { return JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, '')); }
+    catch { throw new AIError('Got a jumbled reply. Try again?'); }
+  }
+  throw lastErr || new AIError('Something went wrong.');
+}
+function aiErrorHtml(e) {
+  if (e.message === 'nokey') return `<p>Moss needs a free Gemini key to give personal replies. <a href="#settings">Add one in Settings</a> — it takes a minute.</p>`;
+  return `<p>😕 ${esc(e.message)}</p>`;
+}
+const thinking = (txt = 'Moss is thinking') => `<div class="ai-tag">🌿 Moss</div><p class="muted dots">${txt}</p>`;
+
+/* ---------------- offline fallbacks (used when no key) ---------------- */
+const OFFLINE = {
+  landing(e) {
+    return [
+      'Okay. Nothing else first. Maybe lie down for 10 minutes, grab a snack and some water, and let your shoulders drop. Everything else can wait a little. 💛',
+      'Low battery is real. How about 10 quiet minutes — eyes closed or just staring at the ceiling — then a snack? You\'ve done enough for right now.',
+      'You made it home. Maybe a glass of water and one slow breath before anything else? No rush at all.',
+      'Nice, some energy left! Maybe a quick snack, then pick one small thing that would feel good to finish.',
+      'Love that you\'re feeling bright. You could use it on something fun or one thing you\'ve been putting off — your call.'
+    ][Math.max(0, Math.min(4, e - 1))];
+  }
+};
+
+/* ---------------- audio: soundscapes (generated, no files) ---------------- */
+const Sound = {
+  ctx: null, nodes: [], current: null, gain: null, vol: 0.4,
+  ensure() { if (!this.ctx) { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); this.gain = this.ctx.createGain(); this.gain.gain.value = this.vol; this.gain.connect(this.ctx.destination); } this.ctx.resume(); },
+  noise(type) {
+    const c = this.ctx, len = c.sampleRate * 4, buf = c.createBuffer(2, len, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch); let last = 0, b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < len; i++) {
+        const w = Math.random() * 2 - 1;
+        if (type === 'brown') { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.2; }
+        else { b0 = 0.997 * b0 + w * 0.029; b1 = 0.985 * b1 + w * 0.032; b2 = 0.95 * b2 + w * 0.048; d[i] = (b0 + b1 + b2 + w * 0.02) * 0.9; }
+      }
+    }
+    const s = c.createBufferSource(); s.buffer = buf; s.loop = true; return s;
+  },
+  play(kind) {
+    this.stop(); this.ensure(); const c = this.ctx; const out = c.createGain(); out.gain.value = 0; out.connect(this.gain);
+    out.gain.linearRampToValueAtTime(1, c.currentTime + 2);
+    if (kind === 'rain') { const n = this.noise('pink'); const f = c.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 400; n.connect(f).connect(out); n.start(); this.nodes.push(n); }
+    if (kind === 'brown') { const n = this.noise('brown'); n.connect(out); n.start(); this.nodes.push(n); }
+    if (kind === 'ocean') {
+      const n = this.noise('pink'); const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700;
+      const g = c.createGain(); g.gain.value = 0.5; const lfo = c.createOscillator(); lfo.frequency.value = 0.09; const lg = c.createGain(); lg.gain.value = 0.45;
+      lfo.connect(lg).connect(g.gain); n.connect(f).connect(g).connect(out); n.start(); lfo.start(); this.nodes.push(n, lfo);
+    }
+    if (kind === 'hum') {
+      [130.81, 196.0, 261.63, 329.63].forEach((fr, i) => {
+        const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = fr; const g = c.createGain(); g.gain.value = 0.07 / (i * 0.5 + 1);
+        const l = c.createOscillator(); l.frequency.value = 0.05 + i * 0.03; const lg = c.createGain(); lg.gain.value = 0.03; l.connect(lg).connect(g.gain);
+        o.connect(g).connect(out); o.start(); l.start(); this.nodes.push(o, l);
+      });
+    }
+    this.out = out; this.current = kind;
+  },
+  stop() { this.nodes.forEach(n => { try { n.stop(); } catch {} }); this.nodes = []; this.out?.disconnect(); this.current = null; },
+  setVol(v) { this.vol = v; if (this.gain) this.gain.gain.value = v; }
+};
+const SOUNDS = [['rain', '🌧️', 'Soft rain'], ['ocean', '🌊', 'Slow waves'], ['brown', '🟤', 'Deep hush'], ['hum', '🎐', 'Warm hum']];
+function openSounds() {
+  sheet(`<h2>Soundscapes</h2><p class="muted small">Calm background sound for landing, studying, or winding down.</p>
+    <div class="grid2" id="snds">${SOUNDS.map(([k, e, n]) => `<button class="tile" data-snd="${k}" style="min-height:80px"><span class="em">${e}</span><b>${n}</b></button>`).join('')}</div>
+    <label class="lbl">Volume</label><input type="range" min="0" max="1" step="0.05" value="${Sound.vol}" id="vol" style="width:100%">
+    <div class="row" style="margin-top:14px"><button class="btn quiet block" id="sstop">Stop sound</button></div>`, (el, close) => {
+    const mark = () => $$('[data-snd]', el).forEach(b => b.style.borderColor = b.dataset.snd === Sound.current ? 'var(--brand)' : '');
+    mark();
+    $$('[data-snd]', el).forEach(b => b.onclick = () => { Sound.play(b.dataset.snd); mark(); });
+    $('#vol', el).oninput = e => Sound.setVol(+e.target.value);
+    $('#sstop', el).onclick = () => { Sound.stop(); mark(); };
+  });
+}
+
+/* ---------------- timer overlay ---------------- */
+function timerOverlay({ title, minutes, steps = [], note = '', onDone }) {
+  const ov = document.createElement('div'); ov.className = 'overlay';
+  let left = Math.round(minutes * 60), paused = false;
+  ov.innerHTML = `<div class="wrap center"><button class="back" id="tclose">✕ Close</button>
+    <h2 style="margin-top:20px">${esc(title)}</h2>${note ? `<p class="muted">${esc(note)}</p>` : ''}
+    <div class="timer" id="tval"></div>
+    <div class="row" style="justify-content:center"><button class="btn quiet" id="tpause">Pause</button><button class="btn" id="tdone">I'm done</button></div>
+    ${steps.length ? `<div class="card" style="text-align:left;margin-top:20px"><h3>Little steps</h3><ul>${steps.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}
+    <p class="small muted" style="margin-top:18px"><button class="btn sm quiet" id="tsnd">🎧 Add calm sound</button></p></div>`;
+  document.body.appendChild(ov);
+  const show = () => $('#tval', ov).textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+  show();
+  const iv = setInterval(() => { if (paused) return; left--; show(); if (left <= 0) finish(true); }, 1000);
+  function finish(auto) { clearInterval(iv); ov.remove(); if (auto) { toast('Time\'s up — nicely done 🌿'); try { navigator.vibrate?.(200); } catch {} } onDone?.(); }
+  $('#tclose', ov).onclick = () => { clearInterval(iv); ov.remove(); };
+  $('#tdone', ov).onclick = () => finish(false);
+  $('#tpause', ov).onclick = e => { paused = !paused; e.target.textContent = paused ? 'Resume' : 'Pause'; };
+  $('#tsnd', ov).onclick = openSounds;
+}
+
+/* ---------------- arrival ritual ---------------- */
+function arrivalRitual() {
+  const steps = [
+    { e: '🫁', t: 'Breathe', d: 'Follow the circle. In as it grows, out as it shrinks.', s: 40, breath: true },
+    { e: '👕', t: 'Change into something comfy', d: isKid() ? 'School clothes off, comfy clothes on.' : 'Work clothes off. You\'re off the clock.', s: 45 },
+    { e: '💧', t: 'Drink some water', d: 'A full glass, slowly.', s: 30 },
+    { e: '🎵', t: 'One song', d: 'Put on one song you like. Just listen, or move a little.', s: 70 }
+  ];
+  let i = 0, iv;
+  const ov = document.createElement('div'); ov.className = 'overlay'; document.body.appendChild(ov);
+  function render() {
+    clearInterval(iv);
+    if (i >= steps.length) {
+      S.rituals[dayKey()] = true; save();
+      ov.innerHTML = `<div class="wrap center"><div style="font-size:3rem;margin-top:60px">🏡</div><h1>You've landed.</h1><p class="muted">School or work stays out there. You're home now.</p><button class="btn" id="rdone" style="margin-top:20px">Back to Softland</button></div>`;
+      $('#rdone', ov).onclick = () => { ov.remove(); route(); };
+      return;
+    }
+    const st = steps[i]; let left = st.s;
+    ov.innerHTML = `<div class="wrap center"><div class="row between"><button class="back" id="rx">✕ Close</button><span class="muted small">Arrival ritual</span></div>
+      <div class="step-dot">${steps.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div>
+      ${st.breath ? '<div class="breath">breathe</div>' : `<div style="font-size:4rem;margin:40px 0 10px">${st.e}</div>`}
+      <h2>${st.t}</h2><p class="muted">${st.d}</p><div class="timer" id="rt" style="font-size:2.2rem"></div>
+      <div class="row" style="justify-content:center"><button class="btn quiet" id="rskip">Skip</button><button class="btn" id="rnext">Done</button></div></div>`;
+    const show = () => $('#rt', ov).textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`; show();
+    iv = setInterval(() => { left--; if (left <= 0) { i++; render(); } else show(); }, 1000);
+    $('#rx', ov).onclick = () => { clearInterval(iv); ov.remove(); };
+    $('#rskip', ov).onclick = $('#rnext', ov).onclick = () => { i++; render(); };
+  }
+  render();
+}
+
+/* ---------------- views ---------------- */
+const views = {};
+const ENERGY = [['🪫', 'empty'], ['😴', 'low'], ['😐', 'meh'], ['🙂', 'okay'], ['⚡', 'bright']];
+const MOODS = ['tired', 'stressed', 'calm', 'happy', 'sad', 'anxious', 'flat', 'wired', 'proud', 'lonely'];
+
+views.onboard = () => {
+  let type = null;
+  app.innerHTML = `<div class="wrap" style="padding-bottom:40px">
+    <div class="center" style="margin:30px 0 20px"><div style="font-size:3.2rem">🌿</div><h1>Welcome to Softland</h1>
+    <p class="muted">A soft landing after a hard day. No streaks, no guilt — just a friend to help you come home to yourself.</p></div>
+    <div class="card"><label class="lbl" for="oname" style="margin-top:0">What should Moss call you?</label>
+    <input type="text" id="oname" placeholder="Your first name or a nickname" autocomplete="given-name">
+    <label class="lbl">Which sounds more like you?</label>
+    <div class="type-pick"><button data-type="kid"><span>🎒</span><b>Student</b><br><small class="muted">coming home from school</small></button>
+    <button data-type="adult"><span>💼</span><b>Adult</b><br><small class="muted">coming home from work</small></button></div></div>
+    <div class="card"><h3>Connect the AI (free)</h3>
+    <p class="small muted">Softland uses Google's Gemini. Get a free API key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> (sign in with Google → "Create API key") and paste it here. It stays only on this device.</p>
+    <input type="password" id="okey" placeholder="Paste your Gemini API key (optional for now)" autocomplete="off">
+    <p class="small muted">You can skip this and add it later in Settings — the app still works with simple built-in suggestions.</p></div>
+    <button class="btn block" id="ogo" disabled>Let's land 🌿</button></div>`;
+  const check = () => $('#ogo').disabled = !type;
+  $$('[data-type]').forEach(b => b.onclick = () => { type = b.dataset.type; $$('[data-type]').forEach(x => x.classList.toggle('on', x === b)); check(); });
+  $('#ogo').onclick = () => {
+    S.profile = { name: $('#oname').value.trim(), type, sleepHours: type === 'kid' ? 9 : 8, arrival: type === 'kid' ? '15:30' : '17:30' };
+    S.settings.apiKey = $('#okey').value.trim();
+    save(); location.hash = '#home'; route();
+  };
+};
+
+views.home = () => {
+  const c = todaysCheckin();
+  const name = S.profile.name ? `, ${esc(S.profile.name)}` : '';
+  const ritualDone = S.rituals[dayKey()];
+  const isSunday = new Date().getDay() === 0;
+  app.innerHTML = `<div class="wrap">
+    <div class="header"><div><h1>${greeting()}${name}.</h1><p class="muted" style="margin:0">${isKid() ? 'School\'s done.' : 'Work\'s done.'} Let's land softly.</p></div>
+    <button class="iconbtn" id="snd" aria-label="Soundscapes">🎧</button></div>
+    ${!ritualDone ? `<div class="card peach"><div class="row between"><div style="flex:1;min-width:180px"><h3>🚪 Arrival ritual</h3><p class="small" style="margin:0">2–3 minutes to mark the line between ${isKid() ? 'school' : 'work'} and home.</p></div><button class="btn sm" id="ritual">Start</button></div></div>` : ''}
+    <div class="card" id="checkin">
+      <h2>How are you, really?</h2>
+      <label class="lbl" style="margin-top:4px">Energy right now</label>
+      <div class="energy">${ENERGY.map(([e, l], i) => `<button data-e="${i + 1}" class="${c?.energy === i + 1 ? 'on' : ''}"><span>${e}</span>${l}</button>`).join('')}</div>
+      <label class="lbl">Feeling… <span class="muted small">(tap any)</span></label>
+      <div class="chips">${MOODS.map(m => `<button class="chip ${c?.moods?.includes(m) ? 'on' : ''}" data-m="${m}">${m}</button>`).join('')}</div>
+      <label class="lbl" for="cnote">Anything on your mind? <span class="muted small">(optional)</span></label>
+      <div class="inputmic"><textarea id="cnote" placeholder="A few words is plenty…" style="min-height:70px"></textarea>${micBtn('cnote')}</div>
+      <button class="btn block" id="land" style="margin-top:12px">Land softly</button>
+    </div>
+    <div id="reply">${c?.reply ? `<div class="card soft"><div class="ai-tag">🌿 Moss</div><div class="reply">${md(c.reply)}</div></div>` : ''}</div>
+    ${isSunday ? `<div class="card lilac"><div class="row between"><div><h3>🗓️ It's Sunday</h3><p class="small" style="margin:0">Your weekly look-back is ready when you are.</p></div><a class="btn sm" href="#lookback">Look back</a></div></div>` : ''}
+    <div class="tiles">
+      <a class="tile" href="#planner" style="text-decoration:none;color:inherit"><span class="em">🗓️</span><b>Planner</b><small>${plansOn(dayKey()).filter(p => !p.done).length ? plansOn(dayKey()).filter(p => !p.done).length + ' plan(s) today' : 'Plan your week gently'}</small></a>
+      <a class="tile" href="#today" style="text-decoration:none;color:inherit"><span class="em">🧭</span><b>Today's compass</b><small>1–3 things that matter</small></a>
+      <a class="tile" href="#tomorrow" style="text-decoration:none;color:inherit"><span class="em">🌅</span><b>Tomorrow</b><small>A soft, energy-aware plan</small></a>
+      <a class="tile" href="#journal" style="text-decoration:none;color:inherit"><span class="em">📓</span><b>Gratitude</b><small>Three good things</small></a>
+      <a class="tile" href="#explore" style="text-decoration:none;color:inherit"><span class="em">🎨</span><b>Explore</b><small>15-minute tasters</small></a>
+      <a class="tile" href="#focus" style="text-decoration:none;color:inherit"><span class="em">${isKid() ? '📚' : '💼'}</span><b>${isKid() ? 'Study helper' : 'Work helper'}</b><small>Matched to your energy</small></a>
+      <a class="tile" href="#jar" style="text-decoration:none;color:inherit"><span class="em">🫙</span><b>Memory jar</b><small>${S.journal.filter(j => j.gratitude).length} good moments</small></a>
+    </div>
+    ${energyPatternCard()}
+  </div>`;
+  let energy = c?.energy || null; let moods = new Set(c?.moods || []);
+  $$('[data-e]').forEach(b => b.onclick = () => { energy = +b.dataset.e; $$('[data-e]').forEach(x => x.classList.toggle('on', x === b)); });
+  $$('[data-m]').forEach(b => b.onclick = () => { b.classList.toggle('on'); moods.has(b.dataset.m) ? moods.delete(b.dataset.m) : moods.add(b.dataset.m); });
+  $('#snd').onclick = openSounds;
+  $('#ritual') && ($('#ritual').onclick = arrivalRitual);
+  bindMics();
+  $('#land').onclick = async () => {
+    if (!energy) { toast('Tap how much energy you have first'); return; }
+    const note = $('#cnote').value.trim();
+    const entry = { t: Date.now(), energy, moods: [...moods], note, reply: '' };
+    // replace today's check-in if one exists within the last 2 hours
+    const prev = lastCheckin();
+    if (prev && Date.now() - prev.t < 2 * 3600e3) S.checkins.pop();
+    S.checkins.push(entry); save();
+    const box = $('#reply');
+    const support = needsSupport(note) ? supportCard() : '';
+    box.innerHTML = support + `<div class="card soft">${thinking()}</div>`;
+    $('#land').disabled = true;
+    let reply;
+    try {
+      reply = await ai({ task: 'The user just got home and did a check-in. Reply with ONE calm, short suggestion for the next 10-20 minutes (2-4 sentences, max ~60 words), like a breathing minute, a snack and water, rest, or a pause before anything else. Acknowledge how they feel first.',
+        prompt: `Energy: ${energy}/5 (${ENERGY[energy - 1][1]}). Feeling: ${[...moods].join(', ') || 'not sure'}. ${note ? 'They said: "' + note + '"' : ''}` });
+    } catch (e) {
+      if (e.message === 'nokey') reply = OFFLINE.landing(energy);
+      else { box.innerHTML = support + `<div class="card soft">${aiErrorHtml(e)}</div>`; $('#land').disabled = false; return; }
+    }
+    entry.reply = reply; save();
+    box.innerHTML = support + `<div class="card soft"><div class="ai-tag">🌿 Moss</div><div class="reply">${md(reply)}</div>
+      ${!S.settings.apiKey ? '<p class="small muted">Built-in suggestion. <a href="#settings">Add a free Gemini key</a> for personal replies.</p>' : ''}
+      <div class="row" style="margin-top:8px"><a class="btn sm" href="#today">See today's compass →</a>${S.settings.buddy.on ? '<button class="btn sm quiet" id="buddy">Send buddy check-in</button>' : ''}</div></div>`;
+    $('#land').disabled = false;
+    $('#buddy') && ($('#buddy').onclick = shareBuddy);
+    speak(reply);
+  };
+};
+
+function energyPatternCard() {
+  const cs = S.checkins;
+  if (cs.length < 3) return `<div class="card"><h3>📈 Your energy over time</h3><p class="small muted" style="margin:0">After a few check-ins, Softland will start to notice when your energy is usually high or low — and suggest better times for studying, moving, or creative stuff.</p></div>`;
+  const buckets = [['Morning', 5, 12], ['Afternoon', 12, 17], ['Evening', 17, 21], ['Night', 21, 29]];
+  const avg = buckets.map(([n, a, b]) => {
+    const xs = cs.filter(c => { let h = new Date(c.t).getHours(); if (h < 5) h += 24; return h >= a && h < b; }).map(c => c.energy);
+    return { n, v: xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : 0, k: xs.length };
+  });
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const byDay = days.map((d, i) => { const xs = cs.filter(c => new Date(c.t).getDay() === i).map(c => c.energy); return { d, v: xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : 0 }; });
+  const withData = avg.filter(a => a.k);
+  const best = withData.slice().sort((a, b) => b.v - a.v)[0];
+  const low = withData.slice().sort((a, b) => a.v - b.v)[0];
+  const ranked = byDay.filter(d => d.v);
+  const lowDay = ranked.slice().sort((a, b) => a.v - b.v)[0];
+  let insight = '';
+  if (best && low && best !== low) insight = `Your energy tends to be highest in the <b>${best.n.toLowerCase()}</b> and lowest in the <b>${low.n.toLowerCase()}</b>. Maybe save ${isKid() ? 'harder homework' : 'focused tasks'} or exercise for the ${best.n.toLowerCase()}, and keep the ${low.n.toLowerCase()} gentle.`;
+  else insight = 'Keep checking in when you feel like it — patterns get clearer over a few weeks.';
+  if (lowDay && ranked.length >= 3) insight += ` ${lowDay.d}s often feel heavier — be extra kind to yourself then.`;
+  return `<div class="card"><h3>📈 Your energy over time</h3>
+    <div class="bars">${byDay.map(d => `<div><i style="height:${d.v ? d.v / 5 * 100 : 0}%;opacity:${d.v ? 1 : .2}"></i><small>${d.d}</small></div>`).join('')}</div>
+    <p class="small" style="margin-bottom:0">${insight}</p></div>`;
+}
+
+/* ----- Today's Compass ----- */
+views.today = () => {
+  const d = day();
+  const planned = plansOn(dayKey()).filter(p => !p.done);
+  if (!d.note && planned.length) d.note = planned.map(p => p.title + (p.time ? ' (' + fmt12(p.time) + ')' : '')).join('\n');
+  const pri = d.items.filter(i => i.priority), opt = d.items.filter(i => !i.priority);
+  app.innerHTML = `<div class="wrap">
+    <h1>Today's compass</h1><p class="muted">What's left today? Dump it all here — Moss will help find the 1–3 things that actually matter. Everything else is optional.</p>
+    <div class="card"><label class="lbl" for="dump" style="margin-top:0">What's on your plate?</label>
+    <div class="inputmic"><textarea id="dump" placeholder="${isKid() ? 'math worksheet, read chapter 4, practice piano, text Sam back…' : 'reply to emails, laundry, groceries, call mom, finish report…'}">${esc(d.note || '')}</textarea>${micBtn('dump')}</div>
+    <button class="btn block" id="compass" style="margin-top:12px">Find what matters</button></div>
+    <div id="out">${d.items.length ? compassHtml(pri, opt, d.message) : ''}</div></div>`;
+  bindMics();
+  bindCompass();
+  $('#compass').onclick = async () => {
+    const txt = $('#dump').value.trim();
+    if (!txt) { toast('Write down a few things first'); return; }
+    d.note = txt; save();
+    $('#out').innerHTML = (needsSupport(txt) ? supportCard() : '') + `<div class="card soft">${thinking('Sorting gently')}</div>`;
+    let r;
+    try {
+      r = await ai({ json: true, prompt: `Here is everything on my plate today:\n${txt}`,
+        task: `Help the user see what matters today. Pick only 1 to 3 priorities (fewer if energy is low) and make everything else optional. Consider their energy. Return JSON exactly like: {"message":"one warm sentence","priorities":[{"text":"short task","why":"few words why","minutes":30}],"optional":["task", "task"]}` });
+    } catch (e) {
+      if (e.message !== 'nokey') { $('#out').innerHTML = `<div class="card soft">${aiErrorHtml(e)}</div>`; return; }
+      const parts = txt.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
+      const n = (todaysCheckin()?.energy || 3) <= 2 ? 1 : 2;
+      r = { message: 'Here\'s a gentle start. (Built-in sorting — add a Gemini key for smarter help.)', priorities: parts.slice(0, n).map(t => ({ text: t, why: '', minutes: 0 })), optional: parts.slice(n) };
+    }
+    d.items = [...(r.priorities || []).slice(0, 3).map(p => ({ id: uid(), text: p.text, why: p.why || '', minutes: p.minutes || 0, priority: true, done: false })),
+      ...(r.optional || []).map(t => ({ id: uid(), text: typeof t === 'string' ? t : t.text, priority: false, done: false }))];
+    d.message = r.message || ''; save();
+    $('#out').innerHTML = compassHtml(d.items.filter(i => i.priority), d.items.filter(i => !i.priority), d.message);
+    bindCompass();
+  };
+};
+function compassHtml(pri, opt, msg) {
+  const row = i => `<div class="item"><button class="check ${i.done ? 'on' : ''}" data-done="${i.id}" aria-label="Mark done">${i.done ? '✓' : ''}</button>
+    <div style="flex:1"><div class="${i.done ? 'done-txt' : ''}"><b>${esc(i.text)}</b></div>${i.why || i.minutes ? `<div class="small muted">${esc(i.why || '')}${i.minutes ? ` · ~${i.minutes} min` : ''}</div>` : ''}</div>
+    ${i.minutes && !i.done ? `<button class="btn sm quiet" data-timer="${i.id}">▶︎</button>` : ''}</div>`;
+  const allDone = pri.length && pri.every(i => i.done);
+  return `${msg ? `<div class="card soft"><div class="ai-tag">🌿 Moss</div><p style="margin:0">${esc(msg)}</p></div>` : ''}
+    <div class="card"><h2>⭐ What matters</h2>${pri.map(row).join('') || '<p class="muted">Nothing urgent. Enjoy your evening.</p>'}
+    ${allDone ? '<p class="center" style="margin-top:10px">🌿 That\'s everything that mattered. The rest of the day is yours.</p>' : ''}</div>
+    ${opt.length ? `<div class="card"><h3>☁️ Optional — only if you feel like it</h3><p class="small muted">These can wait. Truly.</p>${opt.map(row).join('')}</div>` : ''}`;
+}
+function bindCompass() {
+  const d = day();
+  $$('[data-done]').forEach(b => b.onclick = () => { const it = d.items.find(i => i.id === b.dataset.done); it.done = !it.done; save(); views.today(); });
+  $$('[data-timer]').forEach(b => b.onclick = () => { const it = d.items.find(i => i.id === b.dataset.timer);
+    timerOverlay({ title: it.text, minutes: it.minutes, note: 'Just this one thing. You can stop anytime.', onDone: () => { it.done = true; save(); views.today(); } }); });
+}
+
+/* ----- Planner (gentle week planner) ----- */
+const CATS = { school: ['📚', 'School'], work: ['💼', 'Work'], home: ['🏠', 'Home'], fun: ['🎈', 'Fun'], health: ['🌱', 'Health'], other: ['✨', 'Other'] };
+const catList = () => Object.keys(CATS).filter(c => isKid() ? c !== 'work' : c !== 'school');
+const plansOn = k => S.planner.filter(p => p.date === k).sort((a, b) => (a.time || '99').localeCompare(b.time || '99'));
+function addDays(k, n) { const d = new Date(k + 'T12:00:00'); d.setDate(d.getDate() + n); return dayKey(d); }
+function weekStart(k) { const d = new Date(k + 'T12:00:00'); const off = (d.getDay() + 6) % 7; d.setDate(d.getDate() - off); return dayKey(d); }
+const plannerUI = { sel: null };
+views.planner = () => {
+  const today = dayKey();
+  const sel = plannerUI.sel || today; plannerUI.sel = sel;
+  const ws = weekStart(sel); const days = [...Array(7)].map((_, i) => addDays(ws, i));
+  const open = S.planner.filter(p => !p.done && p.date < today).sort((a, b) => a.date.localeCompare(b.date));
+  const selD = new Date(sel + 'T12:00:00');
+  const items = plansOn(sel);
+  app.innerHTML = `<div class="wrap"><div class="header"><div><h1>Planner</h1><p class="muted" style="margin:0">A gentle plan for your week. Nothing here is a deadline for your worth.</p></div></div>
+    <div class="card"><div class="row between"><button class="btn sm quiet" id="pw" aria-label="Previous week">←</button>
+      <b>${new Date(ws + 'T12:00:00').toLocaleDateString([], { month: 'short', day: 'numeric' })} – ${new Date(days[6] + 'T12:00:00').toLocaleDateString([], { month: 'short', day: 'numeric' })}</b>
+      <button class="btn sm quiet" id="nw" aria-label="Next week">→</button></div>
+      <div class="week">${days.map(k => { const d = new Date(k + 'T12:00:00'); const n = plansOn(k).length;
+        return `<button data-day="${k}" class="${k === sel ? 'on' : ''} ${k === today ? 'today' : ''}"><small>${d.toLocaleDateString([], { weekday: 'narrow' })}</small><b>${d.getDate()}</b><i>${n ? '•'.repeat(Math.min(n, 3)) : '&nbsp;'}</i></button>`; }).join('')}</div>
+      ${sel !== today ? '<div class="center"><button class="btn sm quiet" id="ptoday" style="margin-top:8px">Back to today</button></div>' : ''}</div>
+    ${open.length ? `<div class="card peach"><h3>🍃 Still open from earlier</h3><p class="small" style="margin-top:0">No big deal. Move what still matters, let go of what doesn't.</p>
+      ${open.map(p => `<div class="item"><div style="flex:1"><b>${CATS[p.cat]?.[0] || '✨'} ${esc(p.title)}</b><div class="small muted">${new Date(p.date + 'T12:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</div></div>
+      <button class="btn sm" data-move="${p.id}">To today</button><button class="btn sm quiet" data-letgo="${p.id}" aria-label="Let it go">✕</button></div>`).join('')}</div>` : ''}
+    <div class="card"><h2>${sel === today ? 'Today' : sel === addDays(today, 1) ? 'Tomorrow' : selD.toLocaleDateString([], { weekday: 'long' })} <span class="muted small" style="font-family:var(--body)">${selD.toLocaleDateString([], { month: 'long', day: 'numeric' })}</span></h2>
+      ${items.length ? items.map(p => `<div class="item"><button class="check ${p.done ? 'on' : ''}" data-pdone="${p.id}" aria-label="Mark done">${p.done ? '✓' : ''}</button>
+        <div style="flex:1"><div class="${p.done ? 'done-txt' : ''}"><b>${esc(p.title)}</b></div><div class="small muted">${p.time ? fmt12(p.time) + ' · ' : ''}${CATS[p.cat]?.[0] || ''} ${CATS[p.cat]?.[1] || ''}</div></div>
+        <button class="mini-btn" data-pedit="${p.id}" aria-label="Edit">✎</button></div>`).join('') : `<p class="muted">Nothing planned${sel < today ? '' : ' yet — and that\'s okay'}.</p>`}
+      <button class="btn block" id="padd" style="margin-top:10px">+ Add a plan</button></div>
+    <div class="card lilac"><h3>🪄 Help me plan my week</h3><p class="small" style="margin-top:0">Dump everything coming up — tests, deadlines, chores, fun stuff. Moss spreads it out gently, putting harder things on your better-energy days.</p>
+      <div class="inputmic"><textarea id="pdump" placeholder="${isKid() ? 'science test Thursday, book report due Friday, soccer Tue & Thu, clean room' : 'report due Wed, gym 3x, groceries, call landlord, dinner with Jo Fri'}"></textarea>${micBtn('pdump')}</div>
+      <button class="btn block" id="pai" style="margin-top:10px">Spread it out for me</button><div id="pout"></div></div></div>`;
+  bindMics();
+  const go = k => { plannerUI.sel = k; views.planner(); };
+  $('#pw').onclick = () => go(addDays(sel, -7)); $('#nw').onclick = () => go(addDays(sel, 7));
+  $('#ptoday') && ($('#ptoday').onclick = () => go(today));
+  $$('[data-day]').forEach(b => b.onclick = () => go(b.dataset.day));
+  $$('[data-pdone]').forEach(b => b.onclick = () => { const p = S.planner.find(x => x.id === b.dataset.pdone); p.done = !p.done; save(); views.planner(); });
+  $$('[data-move]').forEach(b => b.onclick = () => { S.planner.find(x => x.id === b.dataset.move).date = today; save(); toast('Moved to today 🌿'); views.planner(); });
+  $$('[data-letgo]').forEach(b => b.onclick = () => { S.planner = S.planner.filter(x => x.id !== b.dataset.letgo); save(); toast('Let go 🍃'); views.planner(); });
+  $$('[data-pedit]').forEach(b => b.onclick = () => planSheet(S.planner.find(x => x.id === b.dataset.pedit)));
+  $('#padd').onclick = () => planSheet({ date: sel });
+  $('#pai').onclick = async () => {
+    const txt = $('#pdump').value.trim(); if (!txt) { toast('Write what\'s coming up first'); return; }
+    const out = $('#pout'); out.innerHTML = `<div style="margin-top:12px">${thinking('Spreading things out')}</div>`;
+    const existing = S.planner.filter(p => p.date >= today && p.date <= addDays(today, 13)).map(p => `${p.date}${p.time ? ' ' + p.time : ''}: ${p.title}`).join('; ');
+    const energyByDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => { const xs = S.checkins.filter(c => new Date(c.t).getDay() === i).map(c => c.energy); return xs.length ? `${d} ${(xs.reduce((a, b) => a + b, 0) / xs.length).toFixed(1)}/5` : null; }).filter(Boolean).join(', ');
+    let r;
+    try {
+      r = await ai({ json: true, prompt: `Today is ${today} (${new Date().toLocaleDateString([], { weekday: 'long' })}). Things coming up:\n${txt}\nAlready planned: ${existing || 'nothing'}\nUsual energy by weekday: ${energyByDay || 'unknown yet'}`,
+        task: `Turn the user's list into a gentle plan over the next 14 days. Fixed events (a test on Thursday, soccer Tue) go on their real day. For deadlines, add 1-3 small prep sessions on earlier days (e.g. "Study for science test – part 1"), never cramming everything the night before. Put harder work on higher-energy days, keep at most ~3 plans per day, and leave some days light. Use dates "YYYY-MM-DD", optional "HH:MM" time only if known or helpful, and cat from: ${catList().join(', ')}. Return JSON exactly like: {"message":"one warm sentence","plans":[{"title":"short","date":"2026-01-01","time":"","cat":"${isKid() ? 'school' : 'work'}"}]}` });
+    } catch (e) {
+      if (e.message !== 'nokey') { out.innerHTML = `<div style="margin-top:12px">${aiErrorHtml(e)}</div>`; return; }
+      const parts = txt.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
+      r = { message: 'I spread these over the next few days. (Add a Gemini key for smarter planning around deadlines and energy.)', plans: parts.map((t, i) => ({ title: t, date: addDays(today, Math.floor(i / 2)), time: '', cat: 'other' })) };
+    }
+    const plans = (r.plans || []).filter(p => p.title && /^\d{4}-\d{2}-\d{2}$/.test(p.date)).map(p => ({ id: uid(), title: p.title, date: p.date, time: /^\d{2}:\d{2}$/.test(p.time || '') ? p.time : '', cat: CATS[p.cat] ? p.cat : 'other', done: false }));
+    if (!plans.length) { out.innerHTML = '<p class="muted">Hmm, I couldn\'t make a plan from that. Try listing things with days?</p>'; return; }
+    out.innerHTML = `<div style="margin-top:14px"><div class="ai-tag">🌿 Moss</div><p>${esc(r.message || '')}</p>
+      ${plans.map((p, i) => `<label class="item" style="cursor:pointer"><input type="checkbox" checked data-pick="${i}" style="width:22px;height:22px;margin-top:3px;accent-color:var(--brand)">
+      <div style="flex:1"><b>${CATS[p.cat][0]} ${esc(p.title)}</b><div class="small muted">${new Date(p.date + 'T12:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}${p.time ? ' · ' + fmt12(p.time) : ''}</div></div></label>`).join('')}
+      <button class="btn block" id="paddall" style="margin-top:10px">Add to my planner</button></div>`;
+    $('#paddall').onclick = () => { const picked = $$('[data-pick]').filter(c => c.checked).map(c => plans[+c.dataset.pick]);
+      S.planner.push(...picked); save(); toast(`Added ${picked.length} plan${picked.length === 1 ? '' : 's'} 🌿`); views.planner(); };
+  };
+};
+function planSheet(p) {
+  const isNew = !p.id;
+  sheet(`<h2>${isNew ? 'Add a plan' : 'Edit plan'}</h2>
+    <label class="lbl" for="pt">What</label><div class="inputmic"><textarea id="pt" style="min-height:60px" placeholder="${isKid() ? 'e.g. study for math quiz' : 'e.g. call the dentist'}">${esc(p.title || '')}</textarea>${micBtn('pt')}</div>
+    <div class="grid2"><div><label class="lbl" for="pd">Day</label><input type="date" id="pd" value="${esc(p.date || dayKey())}"></div>
+    <div><label class="lbl" for="ptm">Time <span class="muted small">(optional)</span></label><input type="time" id="ptm" value="${esc(p.time || '')}"></div></div>
+    <label class="lbl">Kind</label><div class="chips">${catList().map(c => `<button class="chip ${(p.cat || (isKid() ? 'school' : 'work')) === c ? 'on' : ''}" data-cat="${c}">${CATS[c][0]} ${CATS[c][1]}</button>`).join('')}</div>
+    <div class="row" style="margin-top:16px">${!isNew ? '<button class="btn quiet" id="pdel">Delete</button>' : ''}<button class="btn" id="psave" style="flex:1">${isNew ? 'Add' : 'Save'}</button></div>`, (el, close) => {
+    bindMics(el);
+    let cat = p.cat || (isKid() ? 'school' : 'work');
+    $$('[data-cat]', el).forEach(b => b.onclick = () => { cat = b.dataset.cat; $$('[data-cat]', el).forEach(x => x.classList.toggle('on', x === b)); });
+    $('#psave', el).onclick = () => {
+      const title = $('#pt', el).value.trim(); if (!title) { toast('What\'s the plan?'); return; }
+      const date = $('#pd', el).value || dayKey();
+      if (isNew) S.planner.push({ id: uid(), title, date, time: $('#ptm', el).value, cat, done: false });
+      else Object.assign(p, { title, date, time: $('#ptm', el).value, cat });
+      plannerUI.sel = date; save(); close(); views.planner();
+    };
+    $('#pdel', el) && ($('#pdel', el).onclick = () => { S.planner = S.planner.filter(x => x.id !== p.id); save(); close(); views.planner(); });
+  });
+}
+
+/* ----- Tomorrow planner + sleep-back ----- */
+function tomorrowKey() { const t = new Date(); t.setDate(t.getDate() + 1); return dayKey(t); }
+function sleepBack(wake, hours) {
+  const bed = fromMin(toMin(wake) - Math.round(hours * 60));
+  return { wake, bed, screensOff: fromMin(toMin(bed) - 30) };
+}
+views.tomorrow = () => {
+  const k = tomorrowKey(); const plan = S.plans[k];
+  const tDay = new Date(); tDay.setDate(tDay.getDate() + 1);
+  app.innerHTML = `<div class="wrap">
+    <h1>Tomorrow</h1><p class="muted">Tell Moss what you'd like tomorrow to hold. You'll get a soft outline — drag it around or ignore any of it.</p>
+    <div class="card">
+      <label class="lbl" for="goal" style="margin-top:0">What do you want tomorrow? (${tDay.toLocaleDateString([], { weekday: 'long' })})</label>
+      <div class="inputmic"><textarea id="goal" placeholder="e.g. wake up early and ride my bike before ${isKid() ? 'school' : 'work'}">${esc(plan?.goal || '')}</textarea>${micBtn('goal')}</div>
+      <label class="lbl" for="fixed">${isKid() ? 'Classes / fixed stuff' : 'Work hours / fixed stuff'} <span class="muted small">(optional)</span></label>
+      <input type="text" id="fixed" value="${esc(plan?.fixed || plansOn(tomorrowKey()).map(p => (p.time ? fmt12(p.time) + ' ' : '') + p.title).join(', '))}" placeholder="${isKid() ? 'school 8:00–3:00, soccer at 5' : 'work 9–5, dentist at 12:30'}">
+      <div class="grid2"><div><label class="lbl" for="wake">Wake time <span class="muted small">(optional)</span></label><input type="time" id="wake" value="${esc(plan?.wakeWanted || '')}"></div>
+      <div><label class="lbl" for="sleep">Sleep you need</label><select id="sleep">${[7, 7.5, 8, 8.5, 9, 9.5, 10].map(h => `<option value="${h}" ${+S.profile.sleepHours === h ? 'selected' : ''}>${h} hours</option>`).join('')}</select></div></div>
+      <button class="btn block" id="plan" style="margin-top:14px">Make a soft plan</button>
+    </div>
+    <div id="out">${plan ? planHtml(plan) : ''}</div></div>`;
+  bindMics();
+  $('#wake').oninput = () => { const w = $('#wake').value; if (w) { const sb = sleepBack(w, +$('#sleep').value); toast(`Bed by ${fmt12(sb.bed)} · screens off ${fmt12(sb.screensOff)}`); } };
+  plan && bindPlan();
+  $('#plan').onclick = async () => {
+    const goal = $('#goal').value.trim(), fixed = $('#fixed').value.trim(), wakeWanted = $('#wake').value, hours = +$('#sleep').value;
+    S.profile.sleepHours = hours; save();
+    if (!goal && !wakeWanted) { toast('Tell Moss a little about tomorrow first'); return; }
+    $('#out').innerHTML = `<div class="card soft">${thinking('Working backward from your morning')}</div>`;
+    const sb = wakeWanted ? sleepBack(wakeWanted, hours) : null;
+    let r;
+    try {
+      r = await ai({ json: true,
+        prompt: `What I want tomorrow: ${goal || '(nothing specific)'}\nFixed commitments: ${fixed || 'none mentioned'}\n${wakeWanted ? 'I want to wake at ' + wakeWanted + '.' : 'Help me pick a wake-up time.'}\nI need about ${hours} hours of sleep.`,
+        task: `Build a soft, energy-aware plan for TOMORROW. Work backward: pick the activity time, then a wake-up time, then tonight's bedtime (wake minus ${hours}h of sleep), then screens-off 30 minutes before bed. Put energetic things at high-energy times and keep the evening gentle. Include 2-3 tiny prep ideas for tonight (like laying out gear). Keep 4-8 blocks, not a minute-by-minute grid. Use 24h "HH:MM" times. Return JSON exactly like: {"message":"one warm sentence","wake":"05:45","bed":"21:45","screensOff":"21:15","tonight":["lay out bike gear"],"blocks":[{"time":"06:15","label":"Bike ride at sunrise","energy":"high"}]} where energy is high, med, or low.` });
+    } catch (e) {
+      if (e.message !== 'nokey') { $('#out').innerHTML = `<div class="card soft">${aiErrorHtml(e)}</div>`; return; }
+      const w = wakeWanted || (isKid() ? '07:00' : '07:00'); const s2 = sleepBack(w, hours);
+      r = { message: 'Here\'s a simple outline from your wake time. (Add a Gemini key for a smarter plan.)', ...s2, tonight: ['Lay out what you need for the morning', 'Fill a water bottle'],
+        blocks: [{ time: w, label: 'Wake up slowly — water first', energy: 'low' }, { time: fromMin(toMin(w) + 30), label: goal || 'Your morning thing', energy: 'high' }, { time: s2.screensOff, label: 'Screens off, wind down', energy: 'low' }] };
+    }
+    if (sb && !r.wake) Object.assign(r, sb);
+    const p = { goal, fixed, wakeWanted, hours, message: r.message || '', wake: r.wake, bed: r.bed, screensOff: r.screensOff || (r.bed ? fromMin(toMin(r.bed) - 30) : ''),
+      tonight: r.tonight || [], blocks: (r.blocks || []).map(b => ({ id: uid(), time: b.time || '', label: b.label || '', energy: ['high', 'med', 'low'].includes(b.energy) ? b.energy : 'med' })) };
+    S.plans[k] = p; save();
+    $('#out').innerHTML = planHtml(p); bindPlan();
+  };
+};
+function planHtml(p) {
+  return `${p.message ? `<div class="card soft"><div class="ai-tag">🌿 Moss</div><p style="margin:0">${esc(p.message)}</p></div>` : ''}
+  <div class="card"><h2>😴 Sleep-back</h2>
+    <div class="bigtime"><div><small>SCREENS OFF</small><b>${fmt12(p.screensOff)}</b></div><div><small>BED BY</small><b>${fmt12(p.bed)}</b></div><div><small>WAKE</small><b>${fmt12(p.wake)}</b></div></div>
+    <p class="small muted" style="margin:10px 0 0">${S.settings.nudges ? 'You\'ll get a soft reminder at screens-off time while Softland is open.' : '<a href="#settings">Turn on soft reminders</a> to get a nudge at screens-off time.'}</p></div>
+  ${p.tonight?.length ? `<div class="card peach"><h3>🌙 Tonight, if you feel like it</h3><ul style="margin:0">${p.tonight.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}
+  <div class="card"><div class="row between"><h2 style="margin:0">🌅 Soft outline</h2><span class="small muted">drag, edit or ✕</span></div>
+    <div id="blocks" style="margin-top:12px">${p.blocks.map(b => `<div class="block-row e-${b.energy}" draggable="true" data-id="${b.id}">
+      <input type="time" value="${esc(b.time)}" data-time="${b.id}" aria-label="Time">
+      <div class="lab">${esc(b.label)}</div>
+      <button class="mini" data-up="${b.id}" aria-label="Move up">↑</button><button class="mini" data-x="${b.id}" aria-label="Remove">✕</button></div>`).join('')}</div>
+    <div class="row" style="margin-top:6px"><input type="text" id="newb" placeholder="Add something…" style="flex:1"><button class="btn sm quiet" id="addb">Add</button></div>
+    <p class="small muted" style="margin:8px 0 0">🟡 high energy · 🟠 medium · 🟣 low. It's a suggestion, not a schedule.</p></div>`;
+}
+function bindPlan() {
+  const p = S.plans[tomorrowKey()];
+  const rerender = () => { save(); $('#out').innerHTML = planHtml(p); bindPlan(); };
+  $$('[data-time]').forEach(i => i.onchange = () => { p.blocks.find(b => b.id === i.dataset.time).time = i.value; p.blocks.sort((a, b) => (a.time || '99').localeCompare(b.time || '99')); rerender(); });
+  $$('[data-x]').forEach(b => b.onclick = () => { p.blocks = p.blocks.filter(x => x.id !== b.dataset.x); rerender(); });
+  $$('[data-up]').forEach(b => b.onclick = () => { const i = p.blocks.findIndex(x => x.id === b.dataset.up); if (i > 0) { [p.blocks[i - 1], p.blocks[i]] = [p.blocks[i], p.blocks[i - 1]]; rerender(); } });
+  $('#addb').onclick = () => { const v = $('#newb').value.trim(); if (!v) return; p.blocks.push({ id: uid(), time: '', label: v, energy: 'med' }); rerender(); };
+  let dragId = null;
+  $$('.block-row').forEach(r => {
+    r.addEventListener('dragstart', () => { dragId = r.dataset.id; r.classList.add('dragging'); });
+    r.addEventListener('dragend', () => r.classList.remove('dragging'));
+    r.addEventListener('dragover', e => e.preventDefault());
+    r.addEventListener('drop', e => { e.preventDefault(); const from = p.blocks.findIndex(b => b.id === dragId), to = p.blocks.findIndex(b => b.id === r.dataset.id);
+      if (from < 0 || to < 0 || from === to) return; const [m] = p.blocks.splice(from, 1); p.blocks.splice(to, 0, m); rerender(); });
+  });
+}
+
+/* ----- Journal ----- */
+const PROMPTS = [
+  { k: 'three', e: '🌼', t: 'Three good things', q: 'What were three good things about today? Tiny counts.', g: true },
+  { k: 'learned', e: '💡', t: 'One thing I learned', q: 'What\'s one thing you learned today — about anything, or about yourself?', g: true },
+  { k: 'letgo', e: '🍃', t: 'One thing to let go of', q: 'What\'s one thing you\'d like to let go of tonight?', g: false },
+  { k: 'free', e: '✏️', t: 'Just write', q: 'Whatever\'s on your mind.', g: false }
+];
+views.journal = () => {
+  const recent = S.journal.slice(-8).reverse();
+  app.innerHTML = `<div class="wrap"><h1>Journal</h1><p class="muted">A two-minute wind-down. Private to you, always.</p>
+    <div class="tiles">${PROMPTS.map(p => `<button class="tile" data-p="${p.k}"><span class="em">${p.e}</span><b>${p.t}</b></button>`).join('')}</div>
+    <a class="card lilac row between" href="#jar" style="text-decoration:none;color:inherit"><span><b>🫙 Memory jar</b><br><span class="small muted">Browse good moments on hard days</span></span><span>→</span></a>
+    ${recent.length ? `<h2 style="margin-top:20px">Recent</h2>${recent.map(entryCard).join('')}` : ''}</div>`;
+  $$('[data-p]').forEach(b => b.onclick = () => journalEntry(PROMPTS.find(p => p.k === b.dataset.p)));
+  bindEntryCards();
+};
+function entryCard(j) {
+  const p = PROMPTS.find(x => x.k === j.prompt) || PROMPTS[3];
+  return `<div class="card"><div class="row between"><span class="pill">${p.e} ${p.t}</span><span class="small muted">${new Date(j.t).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</span></div>
+    <p style="white-space:pre-wrap;margin-top:10px">${esc(j.text)}</p>${j.photo ? `<img class="photo" src="${j.photo}" alt="Journal photo">` : ''}
+    ${j.chat?.length ? `<details><summary class="small muted">Conversation with Moss (${j.chat.length})</summary><div class="chat">${j.chat.map(m => `<div class="msg ${m.role === 'ai' ? 'ai' : 'me'}">${m.role === 'ai' ? md(m.text) : esc(m.text)}</div>`).join('')}</div></details>` : ''}
+    <div class="row" style="justify-content:flex-end"><button class="btn sm quiet" data-del="${j.id}">Delete</button></div></div>`;
+}
+function bindEntryCards() {
+  $$('[data-del]').forEach(b => b.onclick = () => { if (!confirm('Delete this entry?')) return; S.journal = S.journal.filter(j => j.id !== b.dataset.del); save(); route(); });
+}
+function downscale(file, max = 520) {
+  return new Promise((ok, no) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => { const s = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement('canvas');
+      c.width = img.width * s; c.height = img.height * s; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); ok(c.toDataURL('image/jpeg', 0.7)); };
+    img.onerror = no; img.src = url;
+  });
+}
+function journalEntry(p) {
+  const ov = document.createElement('div'); ov.className = 'overlay'; document.body.appendChild(ov);
+  let photo = null; const entry = { id: uid(), t: Date.now(), prompt: p.k, text: '', photo: null, chat: [], gratitude: p.g };
+  ov.innerHTML = `<div class="wrap"><button class="back" id="jx">← Back</button>
+    <h1>${p.e} ${p.t}</h1><p class="muted">${p.q}</p>
+    <div class="card"><div class="inputmic"><textarea id="jt" style="min-height:150px" placeholder="${p.k === 'three' ? '1.\n2.\n3.' : 'Type or tap the mic…'}"></textarea>${micBtn('jt')}</div>
+    <div class="row" style="margin-top:10px"><label class="btn sm quiet" style="cursor:pointer">📷 Add photo<input type="file" accept="image/*" id="jp" hidden></label><span id="jpn" class="small muted"></span></div>
+    <div id="jprev"></div>
+    <button class="btn block" id="js" style="margin-top:12px">Save &amp; chat with Moss</button></div>
+    <div id="jchat"></div></div>`;
+  bindMics(ov);
+  $('#jx', ov).onclick = () => { ov.remove(); route(); };
+  $('#jp', ov).onchange = async e => { const f = e.target.files[0]; if (!f) return; try { photo = await downscale(f); $('#jprev', ov).innerHTML = `<img class="photo" src="${photo}" alt="">`; } catch { toast('Couldn\'t read that photo'); } };
+  $('#js', ov).onclick = async () => {
+    const text = $('#jt', ov).value.trim();
+    if (!text && !photo) { toast('Write a little something first'); return; }
+    entry.text = text; entry.photo = photo;
+    if (!S.journal.find(j => j.id === entry.id)) S.journal.push(entry);
+    save();
+    $('#js', ov).textContent = 'Saved ✓'; $('#js', ov).disabled = true;
+    const chatBox = $('#jchat', ov);
+    const support = needsSupport(text) ? supportCard() : '';
+    const renderChat = (pending) => {
+      chatBox.innerHTML = support + `<div class="card"><div class="ai-tag">🌿 Talking with Moss</div><div class="chat">${entry.chat.map(m => `<div class="msg ${m.role === 'ai' ? 'ai' : 'me'}">${m.role === 'ai' ? md(m.text) : esc(m.text)}</div>`).join('')}
+        ${pending ? '<div class="msg ai"><span class="muted dots">…</span></div>' : ''}</div>
+        <div class="inputmic" style="margin-top:10px"><textarea id="jr" style="min-height:60px" placeholder="Reply, or just close when you're done"></textarea>${micBtn('jr')}</div>
+        <div class="row" style="margin-top:8px"><button class="btn sm" id="jsend">Send</button><button class="btn sm quiet" id="jdone">I'm done for tonight</button></div></div>`;
+      bindMics(chatBox);
+      $('#jsend', chatBox).onclick = send; $('#jdone', chatBox).onclick = () => { ov.remove(); toast(entry.gratitude ? 'Added to your memory jar 🫙' : 'Saved. Sleep well 🌙'); route(); };
+    };
+    const history = () => [{ role: 'user', text: `Journal prompt: "${p.q}"\nMy entry: ${text || '(I added a photo)'}` }, ...entry.chat];
+    async function ask() {
+      renderChat(true);
+      try {
+        const r = await ai({ history: history(), task: 'You are reading the user\'s private journal entry as a caring friend. Reflect back one specific thing warmly, then ask ONE gentle follow-up question so it feels like a conversation, not a form. Max ~50 words. If they say they are done, say a cozy goodnight with no question.' });
+        entry.chat.push({ role: 'ai', text: r }); save(); speak(r);
+      } catch (e) {
+        const fallback = e.message === 'nokey' ? (p.g ? 'I love that you noticed that. What made that moment feel good?' : 'Thanks for writing that down. How do you feel now that it\'s out of your head?') : null;
+        if (fallback) { entry.chat.push({ role: 'ai', text: fallback }); save(); }
+        else { renderChat(false); chatBox.querySelector('.chat').insertAdjacentHTML('beforeend', `<div class="msg ai">${aiErrorHtml(e)}</div>`); return; }
+      }
+      renderChat(false);
+    }
+    async function send() {
+      const v = $('#jr', chatBox).value.trim(); if (!v) return;
+      entry.chat.push({ role: 'user', text: v }); save();
+      if (needsSupport(v) && !chatBox.querySelector('.support')) chatBox.insertAdjacentHTML('afterbegin', supportCard());
+      await ask();
+    }
+    ask();
+  };
+}
+
+/* ----- Memory jar ----- */
+views.jar = () => {
+  const g = S.journal.filter(j => j.gratitude);
+  app.innerHTML = `<div class="wrap"><a class="back" href="#journal">← Journal</a><h1>Memory jar</h1>
+    <p class="muted">Every gratitude entry lands here. On hard days, pull one out.</p>
+    <div class="jar"><div class="fill" style="height:${Math.min(92, g.length * 6 + 4)}%"></div><div class="count">${g.length}</div></div>
+    <div class="center"><button class="btn" id="pull" ${g.length ? '' : 'disabled'}>✨ Pull out a memory</button></div>
+    <div id="pulled" style="margin-top:16px"></div>
+    ${g.length ? `<h2 style="margin-top:20px">All memories</h2>${g.slice().reverse().map(entryCard).join('')}` : '<p class="center muted" style="margin-top:20px">Your jar is empty for now. Try "Three good things" tonight.</p>'}</div>`;
+  bindEntryCards();
+  $('#pull').onclick = () => { const j = g[Math.floor(Math.random() * g.length)];
+    $('#pulled').innerHTML = `<div class="card peach"><p class="small muted">From ${new Date(j.t).toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</p><p style="white-space:pre-wrap;font-size:1.1rem">${esc(j.text)}</p>${j.photo ? `<img class="photo" src="${j.photo}" alt="">` : ''}</div>`; };
+};
+
+/* ----- Explore ----- */
+const INTERESTS = ['music', 'drawing', 'cooking', 'writing', 'photography', 'outdoors', 'dancing', 'crafts', 'reading', 'gardening', 'building things', 'singing', 'animals', 'movement'];
+const OFFLINE_TASTERS = [
+  { emoji: '✏️', name: 'One-minute sketches', what: 'Draw 5 things on your desk, 1 minute each. Bad drawings are the point.', steps: ['Grab any pen', 'Set a 1-minute timer per object', 'No erasing'] },
+  { emoji: '🎸', name: 'Learn one chord', what: 'Look up how to play one chord (like G) on any instrument or a free piano app.', steps: ['Find a short video', 'Copy the finger shape', 'Strum it 10 times'] },
+  { emoji: '📸', name: 'Five-photo walk', what: 'Walk around your home or street and take 5 photos of one color.', steps: ['Pick a color', 'Find 5 things', 'Pick your favorite'] },
+  { emoji: '🍳', name: 'Fancy toast', what: 'Make the most interesting toast you can with what\'s in the kitchen.', steps: ['Toast bread', 'Add 2–3 toppings', 'Give it a fancy name'] }
+];
+views.explore = () => {
+  const ex = S.explore; const likes = new Set(ex.likes);
+  const loved = ex.history.filter(h => h.feel === 'loved');
+  app.innerHTML = `<div class="wrap"><h1>Explore</h1><p class="muted">Find what you love, one tiny 15-minute taster at a time. No commitment, no pressure to continue.</p>
+    <div class="card"><label class="lbl" style="margin-top:0">What sounds even a little fun?</label>
+    <div class="chips">${INTERESTS.map(i => `<button class="chip ${likes.has(i) ? 'on' : ''}" data-i="${esc(i)}">${esc(i)}</button>`).join('')}</div>
+    <label class="lbl" for="extra">Anything else? <span class="muted small">(optional)</span></label><input type="text" id="extra" placeholder="e.g. I liked Lego as a kid">
+    <button class="btn block" id="suggest" style="margin-top:12px">Suggest some tasters</button></div>
+    <div id="tasters">${ex.current.length ? tastersHtml(ex.current) : ''}</div>
+    ${loved.length ? `<div class="card soft"><h3>💛 Things that felt good</h3><div class="chips">${[...new Set(loved.map(l => l.name))].map(n => `<span class="pill">${esc(n)}</span>`).join('')}</div></div>` : ''}
+    ${ex.history.length ? `<p class="small muted center">You've tried ${ex.history.length} taster${ex.history.length > 1 ? 's' : ''}. Moss remembers what felt good.</p>` : ''}</div>`;
+  $$('[data-i]').forEach(b => b.onclick = () => { b.classList.toggle('on'); likes.has(b.dataset.i) ? likes.delete(b.dataset.i) : likes.add(b.dataset.i); ex.likes = [...likes]; save(); });
+  bindTasters();
+  $('#suggest').onclick = async () => {
+    $('#tasters').innerHTML = `<div class="card soft">${thinking('Finding tiny adventures')}</div>`;
+    const hist = ex.history.slice(-15).map(h => `${h.name}: ${h.feel}`).join('; ');
+    let r;
+    try {
+      r = await ai({ json: true, prompt: `Interests: ${ex.likes.join(', ') || 'not sure yet'}. ${$('#extra').value.trim()}\nPast tasters and how they felt: ${hist || 'none yet'}`,
+        task: 'Suggest 3 creative or enjoyable 15-minute "tasters" — tiny try-it sessions (e.g. one chord on a guitar, a single sketch). Match their current energy (low energy = cozy and easy). Lean toward things like what they loved, avoid what was "not for me", and include one slightly new idea. Return JSON exactly like: {"tasters":[{"emoji":"🎸","name":"short name","what":"one-sentence description","steps":["step","step","step"]}]}' });
+    } catch (e) {
+      if (e.message !== 'nokey') { $('#tasters').innerHTML = `<div class="card soft">${aiErrorHtml(e)}</div>`; return; }
+      r = { tasters: OFFLINE_TASTERS.sort(() => Math.random() - .5).slice(0, 3) };
+    }
+    ex.current = (r.tasters || []).slice(0, 4); save();
+    $('#tasters').innerHTML = tastersHtml(ex.current); bindTasters();
+  };
+};
+function tastersHtml(ts) {
+  return ts.map((t, i) => `<div class="card"><div class="row" style="align-items:flex-start"><span style="font-size:2rem">${esc(t.emoji || '✨')}</span>
+    <div style="flex:1"><h3 style="margin:0">${esc(t.name)}</h3><p class="small" style="margin:4px 0 8px">${esc(t.what)}</p></div></div>
+    <button class="btn sm" data-try="${i}">Try it · 15 min</button></div>`).join('');
+}
+function bindTasters() {
+  $$('[data-try]').forEach(b => b.onclick = () => {
+    const t = S.explore.current[+b.dataset.try];
+    timerOverlay({ title: `${t.emoji || ''} ${t.name}`, minutes: 15, steps: t.steps || [], note: 'Just a taster. Stop whenever you like.', onDone: () => feelSheet(t) });
+  });
+}
+function feelSheet(t) {
+  sheet(`<h2>How did that feel?</h2><p class="muted">${esc(t.name)}</p>
+    <div class="grid2" style="grid-template-columns:1fr 1fr 1fr">${[['loved', '💛', 'Loved it'], ['okay', '🙂', 'It was okay'], ['nope', '🙅', 'Not for me']].map(([k, e, l]) => `<button class="tile" data-f="${k}" style="min-height:90px;align-items:center;text-align:center"><span class="em">${e}</span><b class="small">${l}</b></button>`).join('')}</div>
+    <p class="small muted center" style="margin-top:12px">Any answer is a good answer — it helps Moss suggest better things.</p>`, (el, close) => {
+    $$('[data-f]', el).forEach(b => b.onclick = () => { S.explore.history.push({ t: Date.now(), name: t.name, feel: b.dataset.f }); save(); close(); toast(b.dataset.f === 'loved' ? 'Noted — Moss will remember 💛' : 'Thanks for trying something new 🌿'); route(); });
+  });
+}
+
+/* ----- Study / Work helper ----- */
+const METHODS = {
+  kid: {
+    high: { name: 'Deep focus', minutes: 35, tips: ['Phone in another room', 'Pick the hardest subject first', 'Try "active recall": close the book and write what you remember', 'Explain it out loud like you\'re teaching a younger kid'] },
+    med: { name: 'Short sprints', minutes: 20, tips: ['20 minutes on, 5 minutes off', 'One worksheet or section per sprint', 'Stand up and stretch on breaks', 'Do practice questions rather than re-reading'] },
+    low: { name: 'Light review', minutes: 10, tips: ['Flip through flashcards', 'Read your notes out loud', 'Just list what\'s due this week', 'Highlight 3 key ideas — that\'s enough'] }
+  },
+  adult: {
+    high: { name: 'Deep work block', minutes: 45, tips: ['Close email and chat', 'Write the one outcome you want before starting', 'Single-task — one window open', 'Stop at a natural point so tomorrow is easy to start'] },
+    med: { name: 'Admin sprint', minutes: 20, tips: ['Batch small tasks: emails, forms, bills', '20 minutes on, 5 off', 'Two-minute rule: if it\'s tiny, do it now', 'Leave anything big for a higher-energy time'] },
+    low: { name: 'Shutdown ritual', minutes: 10, tips: ['Write down any open loops from work', 'Pick tomorrow\'s first task — just one', 'Close all work tabs', 'Say "done for today" out loud (it helps!)'] }
+  }
+};
+views.focus = () => {
+  const lvl = e => e >= 4 ? 'high' : e === 3 ? 'med' : 'low';
+  let level = lvl(todaysCheckin()?.energy || 3);
+  const draw = () => {
+    const m = METHODS[isKid() ? 'kid' : 'adult'][level];
+    const last = S.focus.last;
+    app.innerHTML = `<div class="wrap"><h1>${isKid() ? '📚 Study helper' : '💼 Work helper'}</h1>
+      <p class="muted">${isKid() ? 'Study tips matched to your energy. Small steps, no cramming guilt.' : 'For work that followed you home — or planning tomorrow\'s, then switching off.'}</p>
+      <div class="card"><label class="lbl" style="margin-top:0">My energy right now</label>
+      <div class="chips">${[['high', '⚡ High'], ['med', '🙂 Medium'], ['low', '🪫 Low']].map(([k, l]) => `<button class="chip ${level === k ? 'on' : ''}" data-lv="${k}">${l}</button>`).join('')}</div></div>
+      <div class="card soft"><h2>${m.name}</h2><ul>${m.tips.map(t => `<li>${t}</li>`).join('')}</ul>
+      <button class="btn sm" id="sprint">▶︎ Start a ${m.minutes}-minute session</button></div>
+      <div class="card"><h3>${isKid() ? 'Break down an assignment' : 'Break down a task'}</h3>
+      <div class="inputmic"><textarea id="task" placeholder="${isKid() ? 'e.g. 2-page essay on the water cycle, due Friday' : 'e.g. prepare slides for Monday\'s meeting'}">${esc(last?.task || '')}</textarea>${micBtn('task')}</div>
+      <input type="text" id="due" placeholder="When is it due? (optional)" style="margin-top:8px" value="${esc(last?.due || '')}">
+      <button class="btn block" id="brk" style="margin-top:10px">Make it small</button></div>
+      <div id="out">${last?.result ? breakdownHtml(last.result) : ''}</div></div>`;
+    bindMics();
+    $$('[data-lv]').forEach(b => b.onclick = () => { level = b.dataset.lv; draw(); });
+    $('#sprint').onclick = () => timerOverlay({ title: m.name, minutes: m.minutes, steps: m.tips, note: 'One thing at a time. Breaks are part of it.' });
+    bindBreakdown();
+    $('#brk').onclick = async () => {
+      const task = $('#task').value.trim(), due = $('#due').value.trim();
+      if (!task) { toast('What are you working on?'); return; }
+      $('#out').innerHTML = `<div class="card soft">${thinking('Making it smaller')}</div>`;
+      let r;
+      try {
+        r = await ai({ json: true, prompt: `${isKid() ? 'Assignment' : 'Task'}: ${task}\nDue: ${due || 'not sure'}\nMy energy level: ${level}`,
+          task: `Break this into small, concrete steps (4-7 steps, 5-30 minutes each). Suggest an energy-matched method and a gentle idea of WHEN to do it (today vs later days, morning vs evening) based on their energy and the due date. Return JSON exactly like: {"method":"short tip","when":"one sentence","steps":[{"text":"step","minutes":15}]}` });
+      } catch (e) {
+        if (e.message !== 'nokey') { $('#out').innerHTML = `<div class="card soft">${aiErrorHtml(e)}</div>`; return; }
+        r = { method: m.name + ' works well right now.', when: 'Maybe do the first step today and the rest over the next few days.', steps: [{ text: 'Read the instructions and write what "done" looks like', minutes: 5 }, { text: 'Gather what you need', minutes: 10 }, { text: 'Do a rough first part', minutes: 20 }, { text: 'Rest, then improve it', minutes: 20 }] };
+      }
+      r.steps = (r.steps || []).map(s => ({ ...s, done: false }));
+      S.focus.last = { task, due, result: r }; save();
+      $('#out').innerHTML = breakdownHtml(r); bindBreakdown();
+    };
+  };
+  draw();
+};
+function breakdownHtml(r) {
+  return `<div class="card"><div class="ai-tag">🌿 Moss</div>${r.method ? `<p><b>Method:</b> ${esc(r.method)}</p>` : ''}${r.when ? `<p><b>When:</b> ${esc(r.when)}</p>` : ''}
+    ${r.steps.map((s, i) => `<div class="item"><button class="check ${s.done ? 'on' : ''}" data-step="${i}">${s.done ? '✓' : ''}</button><div style="flex:1" class="${s.done ? 'done-txt' : ''}">${esc(s.text)}${s.minutes ? ` <span class="small muted">· ${s.minutes} min</span>` : ''}</div>
+    ${!s.done && s.minutes ? `<button class="btn sm quiet" data-stimer="${i}">▶︎</button>` : ''}</div>`).join('')}</div>`;
+}
+function bindBreakdown() {
+  const r = S.focus.last?.result; if (!r) return;
+  $$('[data-step]').forEach(b => b.onclick = () => { r.steps[+b.dataset.step].done ^= true; save(); $('#out').innerHTML = breakdownHtml(r); bindBreakdown(); });
+  $$('[data-stimer]').forEach(b => b.onclick = () => { const s = r.steps[+b.dataset.stimer];
+    timerOverlay({ title: s.text, minutes: s.minutes, onDone: () => { s.done = true; save(); $('#out') && ($('#out').innerHTML = breakdownHtml(r), bindBreakdown()); } }); });
+}
+
+/* ----- Overwhelm mode ----- */
+function overwhelm() {
+  const ov = document.createElement('div'); ov.className = 'overlay'; ov.style.background = 'var(--card)';
+  document.body.appendChild(ov);
+  const home = () => {
+    ov.innerHTML = `<div class="wrap center"><div class="row between"><button class="back" id="ox">✕ Close</button><span></span></div>
+      <h1 style="margin-top:10px">It's okay. Let's slow down.</h1><p class="muted">Nothing needs to happen right now except this breath.</p>
+      <div class="breath">breathe</div>
+      <div class="card" style="text-align:left"><label class="lbl" for="ow" style="margin-top:0">What's weighing on you? <span class="muted small">(messy is fine)</span></label>
+      <div class="inputmic"><textarea id="ow" placeholder="Everything, or one thing…"></textarea>${micBtn('ow')}</div>
+      <button class="btn block" id="ostep" style="margin-top:10px">Help me find one small step</button></div>
+      <div id="oout" style="text-align:left"></div>
+      <div class="row" style="justify-content:center;margin-top:10px"><button class="btn quiet" id="ground">🌍 5-4-3-2-1 grounding</button><button class="btn quiet" id="osnd">🎧 Calm sound</button></div></div>`;
+    bindMics(ov);
+    $('#ox', ov).onclick = () => ov.remove();
+    $('#osnd', ov).onclick = openSounds;
+    $('#ground', ov).onclick = grounding;
+    $('#ostep', ov).onclick = async () => {
+      const txt = $('#ow', ov).value.trim();
+      const out = $('#oout', ov); const support = needsSupport(txt) ? supportCard() : '';
+      out.innerHTML = support + `<div class="card soft">${thinking('Here with you')}</div>`;
+      let r;
+      try {
+        r = await ai({ prompt: txt || 'Everything just feels like too much right now.',
+          task: 'The user pressed the "Too much" button and feels overwhelmed. Very briefly validate them (one sentence). Then offer just ONE tiny, doable next step (under 5 minutes). Optionally one calming idea. Max ~55 words. No lists of many things.' });
+      } catch (e) {
+        if (e.message !== 'nokey') { out.innerHTML = support + `<div class="card soft">${aiErrorHtml(e)}</div>`; return; }
+        r = 'That\'s a lot to hold. Let\'s make it tiny: **drink some water and write down the one thing that\'s loudest in your head.** That\'s it. Everything else can wait until you\'ve had a breath.';
+      }
+      out.innerHTML = support + `<div class="card soft"><div class="ai-tag">🌿 Moss</div><div class="reply">${md(r)}</div></div>`;
+      speak(r);
+    };
+  };
+  const grounding = () => {
+    const steps = [['👀', '5 things you can see'], ['✋', '4 things you can touch'], ['👂', '3 things you can hear'], ['👃', '2 things you can smell'], ['👅', '1 thing you can taste']];
+    let i = 0;
+    const draw = () => {
+      if (i >= steps.length) { ov.innerHTML = `<div class="wrap center"><div style="font-size:3rem;margin-top:70px">🌿</div><h2>You're here. You're okay.</h2><button class="btn" id="gb" style="margin-top:16px">Back</button></div>`; $('#gb', ov).onclick = home; return; }
+      ov.innerHTML = `<div class="wrap center"><div class="step-dot" style="margin-top:30px">${steps.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div><div style="font-size:4rem;margin:50px 0 10px">${steps[i][0]}</div>
+        <h1>Notice ${steps[i][1]}</h1><p class="muted">Take your time. Name them in your head or out loud.</p><button class="btn" id="gn" style="margin-top:20px">Next</button></div>`;
+      $('#gn', ov).onclick = () => { i++; draw(); };
+    };
+    draw();
+  };
+  home();
+}
+
+/* ----- Weekly look-back ----- */
+views.lookback = () => {
+  const weekAgo = Date.now() - 7 * 864e5;
+  const cs = S.checkins.filter(c => c.t > weekAgo), js = S.journal.filter(j => j.t > weekAgo), hs = S.explore.history.filter(h => h.t > weekAgo);
+  const avg = cs.length ? (cs.reduce((s, c) => s + c.energy, 0) / cs.length).toFixed(1) : '–';
+  const last = S.lookbacks[S.lookbacks.length - 1];
+  app.innerHTML = `<div class="wrap"><a class="back" href="#more">← More</a><h1>Weekly look-back</h1>
+    <p class="muted">A gentle look at your week — what you enjoyed, what drained you, what you're grateful for.</p>
+    <div class="bigtime"><div><small>CHECK-INS</small><b>${cs.length}</b></div><div><small>AVG ENERGY</small><b>${avg}</b></div><div><small>JOURNAL</small><b>${js.length}</b></div></div>
+    <button class="btn block" id="lb" style="margin:14px 0">Make my look-back</button>
+    <div id="out">${last ? lookbackCard(last) : ''}</div></div>`;
+  $('#lb').onclick = async () => {
+    if (!cs.length && !js.length && !hs.length) { toast('Not much to look back on yet — check in a few times this week'); return; }
+    $('#out').innerHTML = `<div class="card soft">${thinking('Looking back on your week')}</div>`;
+    const data = [
+      'Check-ins: ' + cs.map(c => `${new Date(c.t).toLocaleDateString([], { weekday: 'short' })} energy ${c.energy}/5 ${c.moods.join('/')} ${c.note ? '"' + c.note + '"' : ''}`).join('; '),
+      'Journal: ' + js.map(j => `[${j.prompt}] ${j.text.slice(0, 300)}`).join(' | '),
+      'Tasters tried: ' + hs.map(h => `${h.name} (${h.feel})`).join(', ')
+    ].join('\n');
+    let r;
+    try {
+      r = await ai({ prompt: data, task: 'Write the user\'s short Sunday weekly look-back from their data. Use exactly these four short sections with bold labels: **What you enjoyed**, **What drained you**, **What you\'re grateful for**, **One gentle idea for next week**. 1-2 sentences each, warm, no judgement about missed days.' });
+    } catch (e) {
+      if (e.message !== 'nokey') { $('#out').innerHTML = `<div class="card soft">${aiErrorHtml(e)}</div>`; return; }
+      const loved = hs.filter(h => h.feel === 'loved').map(h => h.name);
+      r = `**What you enjoyed:** ${loved.length ? loved.join(', ') : 'Look through your journal — there were good bits.'}\n**What drained you:** Your lowest energy check-ins were on ${[...new Set(cs.filter(c => c.energy <= 2).map(c => new Date(c.t).toLocaleDateString([], { weekday: 'long' })))].join(', ') || 'no particular day'}.\n**What you're grateful for:** ${js.filter(j => j.gratitude).length} gratitude moments went into your jar.\n**One gentle idea for next week:** Try one new 15-minute taster.`;
+    }
+    const lb = { t: Date.now(), text: r }; S.lookbacks.push(lb); save();
+    $('#out').innerHTML = lookbackCard(lb);
+  };
+};
+const lookbackCard = lb => `<div class="card soft"><div class="ai-tag">🌿 Your week · ${new Date(lb.t).toLocaleDateString([], { month: 'short', day: 'numeric' })}</div><div class="reply">${md(lb.text)}</div></div>`;
+
+/* ----- More ----- */
+views.more = () => {
+  app.innerHTML = `<div class="wrap"><h1>More</h1>
+    <div class="tiles">
+      <a class="tile" href="#explore" style="text-decoration:none;color:inherit"><span class="em">🎨</span><b>Explore</b><small>15-minute tasters</small></a>
+      <a class="tile" href="#focus" style="text-decoration:none;color:inherit"><span class="em">${isKid() ? '📚' : '💼'}</span><b>${isKid() ? 'Study helper' : 'Work helper'}</b><small>Energy-matched</small></a>
+      <a class="tile" href="#lookback" style="text-decoration:none;color:inherit"><span class="em">🗓️</span><b>Weekly look-back</b><small>Your week, gently</small></a>
+      <a class="tile" href="#jar" style="text-decoration:none;color:inherit"><span class="em">🫙</span><b>Memory jar</b><small>Good moments</small></a>
+      <button class="tile" id="msnd"><span class="em">🎧</span><b>Soundscapes</b><small>Rain, waves, hum</small></button>
+      <button class="tile" id="mrit"><span class="em">🚪</span><b>Arrival ritual</b><small>2–3 minute transition</small></button>
+      ${S.settings.buddy.on || (isKid() && S.settings.parent.on) ? `<button class="tile" id="mshare"><span class="em">🤝</span><b>Share how I'm doing</b><small>${S.settings.buddy.on ? 'Buddy check-in' : 'Parent signal'}</small></button>` : ''}
+      <a class="tile" href="#settings" style="text-decoration:none;color:inherit"><span class="em">⚙️</span><b>Settings</b><small>AI key, privacy, sharing</small></a>
+    </div>
+    <p class="small muted center">Softland is not a replacement for professional care. If things feel really heavy, please talk to someone you trust.</p></div>`;
+  $('#msnd').onclick = openSounds; $('#mrit').onclick = arrivalRitual;
+  $('#mshare') && ($('#mshare').onclick = () => S.settings.buddy.on ? shareBuddy() : shareParent());
+};
+
+/* ----- Sharing (off by default, never shares journal content) ----- */
+async function shareText(text) {
+  try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text); toast('Copied — paste it in a message'); } catch { prompt('Copy this:', text); }
+}
+function shareBuddy() {
+  const c = todaysCheckin();
+  const line = c ? `${ENERGY[c.energy - 1][0]} energy ${c.energy}/5${c.moods.length ? ', feeling ' + c.moods.slice(0, 2).join(' & ') : ''}` : 'checking in 🌿';
+  sheet(`<h2>Buddy check-in</h2><p class="muted small">A one-line check-in for ${esc(S.settings.buddy.name || 'your buddy')}. Only this line is shared — never your journal.</p>
+    <input type="text" id="bl" value="${esc(`Softland check-in from ${S.profile.name || 'me'}: ${line}`)}">
+    <button class="btn block" id="bs" style="margin-top:12px">Share</button>`, (el, close) => { $('#bs', el).onclick = () => { shareText($('#bl', el).value); close(); }; });
+}
+function shareParent() {
+  sheet(`<h2>How I'm doing</h2><p class="muted small">Send a simple signal to a parent. Nothing else is shared — never your journal or check-in notes.</p>
+    <div class="grid2" style="grid-template-columns:1fr 1fr 1fr">${[['☀️', 'Doing good'], ['🌤️', 'Doing okay'], ['🌧️', 'Rough day — could use a hug']].map(([e, l]) => `<button class="tile" data-sig="${e} ${l}" style="min-height:90px;align-items:center;text-align:center"><span class="em">${e}</span><b class="small">${l}</b></button>`).join('')}</div>`,
+    (el, close) => $$('[data-sig]', el).forEach(b => b.onclick = () => { shareText(`${S.profile.name || 'Your kid'} on Softland: ${b.dataset.sig}`); close(); }));
+}
+
+/* ----- Settings ----- */
+views.settings = () => {
+  const st = S.settings, p = S.profile;
+  app.innerHTML = `<div class="wrap"><a class="back" href="#more">← More</a><h1>Settings</h1>
+    <div class="card"><h2>You</h2>
+      <label class="lbl" for="sname">Name</label><input type="text" id="sname" value="${esc(p.name)}">
+      <label class="lbl">Account type</label><div class="chips"><button class="chip ${p.type === 'kid' ? 'on' : ''}" data-t="kid">🎒 Student (School mode)</button><button class="chip ${p.type === 'adult' ? 'on' : ''}" data-t="adult">💼 Adult (Work mode)</button></div>
+      <div class="grid2"><div><label class="lbl" for="sarr">Usual arrival home</label><input type="time" id="sarr" value="${esc(p.arrival || '')}"></div>
+      <div><label class="lbl" for="ssl">Sleep you need</label><select id="ssl">${[7, 7.5, 8, 8.5, 9, 9.5, 10].map(h => `<option ${+p.sleepHours === h ? 'selected' : ''} value="${h}">${h} h</option>`).join('')}</select></div></div></div>
+    <div class="card"><h2>AI (Google Gemini)</h2>
+      <p class="small muted">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. It's stored only in this browser and sent only to Google. Note: on Google's free tier, Google may use prompts to improve its products — so avoid writing anything you'd never want anyone to read.</p>
+      <label class="lbl" for="skey">API key</label><div class="row" style="flex-wrap:nowrap"><input type="password" id="skey" value="${esc(st.apiKey)}" autocomplete="off" placeholder="AIza…"><button class="iconbtn" id="eye" aria-label="Show key">👁️</button></div>
+      <label class="lbl" for="smodel">Model</label><input type="text" id="smodel" value="${esc(st.model)}" placeholder="gemini-flash-latest">
+      <p class="small muted">Leave as <code>gemini-flash-latest</code> unless you know you want another one.</p>
+      <button class="btn sm quiet" id="test">Test connection</button> <span id="tres" class="small"></span></div>
+    <div class="card"><h2>Comfort</h2>
+      <label class="switch"><span>🔊 Read Moss's replies out loud</span><input type="checkbox" id="svoice" ${st.voiceReplies ? 'checked' : ''}></label>
+      <label class="switch"><span>🔔 Soft reminders<br><small class="muted">"How are you?" at arrival time, and a screens-off nudge. Works while Softland is open or installed.</small></span><input type="checkbox" id="snudge" ${st.nudges ? 'checked' : ''}></label>
+      <label class="lbl">Theme</label><div class="chips">${[['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']].map(([k, l]) => `<button class="chip ${st.theme === k ? 'on' : ''}" data-th="${k}">${l}</button>`).join('')}</div>
+      <p class="small muted" style="margin-top:12px">📱 Tip: add Softland to your home screen (Share → "Add to Home Screen" on iPhone, or the install option in your browser menu) so it's one tap away when you get home.</p></div>
+    <div class="card"><h2>Sharing <span class="pill">off by default</span></h2>
+      <p class="small muted">Sharing never includes journal entries or private notes.</p>
+      <label class="switch"><span>🤝 Optional buddy — share a one-line daily check-in with one trusted person</span><input type="checkbox" id="sbuddy" ${st.buddy.on ? 'checked' : ''}></label>
+      <div id="bname" ${st.buddy.on ? '' : 'hidden'}><input type="text" id="sbn" placeholder="Buddy's name" value="${esc(st.buddy.name)}"></div>
+      ${p.type === 'kid' ? `<label class="switch"><span>👪 Light parent view — send a simple "how I'm doing" signal</span><input type="checkbox" id="sparent" ${st.parent.on ? 'checked' : ''}></label>` : ''}</div>
+    <div class="card"><h2>Your data</h2><p class="small muted">Everything lives on this device only. No account, no server.</p>
+      <div class="row"><button class="btn sm quiet" id="exp">Download my data</button><button class="btn sm quiet" id="wipe" style="color:#B5524F">Delete everything</button></div></div>
+    <p class="small muted center">Softland · a soft landing after a hard day 🌿</p></div>`;
+  const persist = () => {
+    p.name = $('#sname').value.trim(); p.arrival = $('#sarr').value; p.sleepHours = +$('#ssl').value;
+    st.apiKey = $('#skey').value.trim(); st.model = $('#smodel').value.trim() || 'gemini-flash-latest';
+    st.voiceReplies = $('#svoice').checked; st.buddy.on = $('#sbuddy').checked; st.buddy.name = $('#sbn').value.trim();
+    if ($('#sparent')) st.parent.on = $('#sparent').checked;
+    save();
+  };
+  $$('input,select', app).forEach(i => i.addEventListener('change', persist));
+  $$('[data-t]').forEach(b => b.onclick = () => { persist(); p.type = b.dataset.t; save(); views.settings(); });
+  $$('[data-th]').forEach(b => b.onclick = () => { st.theme = b.dataset.th; save(); applyTheme(); views.settings(); });
+  $('#sbuddy').addEventListener('change', () => $('#bname').hidden = !$('#sbuddy').checked);
+  $('#eye').onclick = () => { const k = $('#skey'); k.type = k.type === 'password' ? 'text' : 'password'; };
+  $('#snudge').onchange = async e => {
+    if (e.target.checked && 'Notification' in window && Notification.permission !== 'granted') {
+      const r = await Notification.requestPermission(); if (r !== 'granted') { e.target.checked = false; toast('Notifications are blocked in your browser'); }
+    }
+    st.nudges = e.target.checked; save();
+  };
+  $('#test').onclick = async () => {
+    persist(); $('#tres').textContent = 'Testing…';
+    try { const r = await ai({ prompt: 'Say hi in five words or fewer.' }); $('#tres').textContent = '✅ Working! Moss says: ' + r; }
+    catch (e) { $('#tres').textContent = e.message === 'nokey' ? 'Paste a key first.' : '❌ ' + e.message; }
+  };
+  $('#exp').onclick = () => { const a = document.createElement('a'); const data = { ...S, settings: { ...S.settings, apiKey: '' } };
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })); a.download = `softland-${dayKey()}.json`; a.click(); };
+  $('#wipe').onclick = () => { if (confirm('Delete all your Softland data from this device? This can\'t be undone.')) { localStorage.removeItem(STORE); S = structuredClone(DEFAULTS); location.hash = ''; route(); } };
+};
+
+/* ---------------- reminders (soft, only while open/installed) ---------------- */
+function nudge(title, body) {
+  if (!S.settings.nudges) return;
+  if ('Notification' in window && Notification.permission === 'granted') {
+    navigator.serviceWorker?.ready.then(r => r.showNotification(title, { body, icon: 'icon.svg', tag: title })).catch(() => new Notification(title, { body, icon: 'icon.svg' }));
+  } else toast(`${title} — ${body}`, 5000);
+}
+setInterval(() => {
+  if (!S.profile || !S.settings.nudges) return;
+  const now = new Date(), hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, k = dayKey();
+  if (S.profile.arrival && hm === S.profile.arrival && !S.fired['arr' + k]) { S.fired['arr' + k] = 1; save(); nudge('Softland 🌿', 'Hey, you\'re home. How are you?'); }
+  const plan = S.plans[tomorrowKey()];
+  if (plan?.screensOff && hm === plan.screensOff && !S.fired['wd' + k]) { S.fired['wd' + k] = 1; save(); nudge('Wind-down time 🌙', `Maybe start putting screens away — bed by ${fmt12(plan.bed)} for your ${fmt12(plan.wake)} wake-up.`); }
+}, 20000);
+
+/* ---------------- router ---------------- */
+function route() {
+  window.scrollTo(0, 0);
+  if (!S.profile) { $('#tabs').hidden = true; $('#fab').hidden = true; views.onboard(); return; }
+  const name = (location.hash.slice(1) || 'home');
+  const v = views[name] && name !== 'onboard' ? name : 'home';
+  $('#tabs').hidden = false; $('#fab').hidden = false;
+  const tab = { explore: 'more', focus: 'more', lookback: 'more', settings: 'more', jar: 'journal' }[v] || v;
+  $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.go === tab));
+  views[v]();
+}
+$$('#tabs button').forEach(b => b.onclick = () => { if (location.hash === '#' + b.dataset.go) route(); else location.hash = b.dataset.go; });
+$('#fab').onclick = overwhelm;
+window.addEventListener('hashchange', route);
+route();
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

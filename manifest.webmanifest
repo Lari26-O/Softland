@@ -1,0 +1,11 @@
+{
+  "name": "Softland",
+  "short_name": "Softland",
+  "description": "A soft landing after a hard day.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F5F2EC",
+  "theme_color": "#2C7A70",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
