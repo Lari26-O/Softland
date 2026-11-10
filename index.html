@@ -209,6 +209,7 @@ const DEFAULTS = {
   explore: { likes: [], history: [], current: [] }, // history:{t,name,feel}
   focus: { last: null },
   lookbacks: [],      // {t, text}
+  weeklan: null,      // {connected,email,items[],lastSync} read-only copy of Weeklan assignments
   planner: [],        // {id,title,date,time,cat,done}
   fired: {}           // reminders fired {kind+day:true}
 };
@@ -335,7 +336,7 @@ function contextLine() {
   const now = new Date();
   let s = `Current local time: ${now.toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' })}.`;
   if (c) s += ` Today's check-in: energy ${c.energy}/5${c.moods?.length ? ', feeling ' + c.moods.join(', ') : ''}${c.note ? ', said: "' + c.note + '"' : ''}.`;
-  return s;
+  return s + wkContext();
 }
 class AIError extends Error {}
 /* Shared Softland AI server (Cloudflare Worker in /server). It holds the keys and
@@ -572,6 +573,7 @@ views.home = () => {
       <button class="btn block" id="land" style="margin-top:12px">Land softly</button>
     </div>
     <div id="reply">${c?.reply ? `<div class="card soft"><div class="ai-tag">🌿 Moss</div><div class="reply">${md(c.reply)}</div></div>` : ''}</div>
+    ${homeWeeklanCard()}
     ${isSunday ? `<div class="card lilac"><div class="row between"><div><h3>🗓️ It's Sunday</h3><p class="small" style="margin:0">Your weekly look-back is ready when you are.</p></div><a class="btn sm" href="#lookback">Look back</a></div></div>` : ''}
     <div class="tiles">
       <a class="tile" href="#planner" style="text-decoration:none;color:inherit"><span class="em">🗓️</span><b>Planner</b><small>${plansOn(dayKey()).filter(p => !p.done).length ? plansOn(dayKey()).filter(p => !p.done).length + ' plan(s) today' : 'Plan your week gently'}</small></a>
@@ -620,6 +622,13 @@ views.home = () => {
   };
 };
 
+function homeWeeklanCard() {
+  if (!wkOn()) return isKid() ? `<a class="card lilac row between" href="#settings" style="text-decoration:none;color:inherit"><span><b>📅 Use Weeklan?</b><br><span class="small muted">Connect it so Moss knows what's due and plans your study time.</span></span><span>→</span></a>` : '';
+  const up = wkUpcoming(7);
+  return `<div class="card"><div class="row between"><h3 style="margin:0">📅 Coming up</h3><span class="small muted">from Weeklan</span></div>
+    ${up.length ? up.slice(0, 4).map(i => wkItemRow(i, false)).join('') + (up.length > 4 ? `<p class="small muted">+ ${up.length - 4} more this week</p>` : '') : '<p class="muted" style="margin-bottom:0">Nothing due this week. Enjoy it 🌿</p>'}
+    ${up.length ? '<a class="btn sm" href="#focus" style="margin-top:8px">Plan my study time →</a>' : ''}</div>`;
+}
 function energyPatternCard() {
   const cs = S.checkins;
   if (cs.length < 3) return `<div class="card"><h3>📈 Your energy over time</h3><p class="small muted" style="margin:0">After a few check-ins, Softland will start to notice when your energy is usually high or low — and suggest better times for studying, moving, or creative stuff.</p></div>`;
@@ -648,7 +657,9 @@ function energyPatternCard() {
 views.today = () => {
   const d = day();
   const planned = plansOn(dayKey()).filter(p => !p.done);
-  if (!d.note && planned.length) d.note = planned.map(p => p.title + (p.time ? ' (' + fmt12(p.time) + ')' : '')).join('\n');
+  const wkSoon = wkUpcoming(2).filter(i => i.kind !== 'event' && !planned.some(p => p.title.toLowerCase().includes(i.title.toLowerCase())));
+  if (!d.note && (planned.length || wkSoon.length)) d.note = [...planned.map(p => p.title + (p.time ? ' (' + fmt12(p.time) + ')' : '')),
+    ...wkSoon.map(i => (i.isTest ? 'Study for ' : '') + i.title + ' (due ' + wkDueLabel(i) + ')')].join('\n');
   const pri = d.items.filter(i => i.priority), opt = d.items.filter(i => !i.priority);
   app.innerHTML = `<div class="wrap">
     <h1>Today's compass</h1><p class="muted">What's left today? Dump it all here — Moss will help find the 1–3 things that actually matter. Everything else is optional.</p>
@@ -697,6 +708,146 @@ function bindCompass() {
     timerOverlay({ title: it.text, minutes: it.minutes, note: 'Just this one thing. You can stop anytime.', onDone: () => { it.done = true; save(); views.today(); } }); });
 }
 
+/* ----- Weeklan connection (READ-ONLY) -----
+   Signs in with the person's Weeklan account (same Supabase project as Weeklan)
+   and reads their assignments. Softland never writes, edits or deletes anything in Weeklan.
+   The anon key below is Weeklan's public client key (the same one in Weeklan's page);
+   row-level security means each person can only read their own items. */
+const WEEKLAN = { url: 'https://hiqcvokyksuwyvcgqppd.supabase.co', anon: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpcWN2b2t5a3N1d3l2Y2dxcHBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0MjMzNjAsImV4cCI6MjEwMDk5OTM2MH0.dbX5BrzzsBZZvR7JJbjrDAsSq5Y8lxkhwDjGBYyMD7s' };
+let wkClient = null;
+function loadScript(src) { return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => no(new Error('Could not load. Check your internet.')); document.head.appendChild(s); }); }
+async function weeklanClient() {
+  if (wkClient) return wkClient;
+  if (!window.supabase) await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js');
+  wkClient = window.supabase.createClient(WEEKLAN.url, WEEKLAN.anon, { auth: { storageKey: 'softland-weeklan-auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
+  return wkClient;
+}
+const isTestTitle = t => /\b(test|exam|quiz|final|midterm)\b/i.test(t || '');
+async function weeklanSignIn(email, password) {
+  const sb = await weeklanClient();
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(/invalid/i.test(error.message) ? 'That email or password doesn\'t match your Weeklan account.' : error.message);
+  S.weeklan = { connected: true, email: data.user?.email || email, items: [], lastSync: 0 };
+  save();
+  await weeklanSync(true);
+}
+async function weeklanSync(force) {
+  if (!S.weeklan?.connected) return false;
+  if (!force && Date.now() - (S.weeklan.lastSync || 0) < 10 * 60e3) return false;
+  const sb = await weeklanClient();
+  const { data: sess } = await sb.auth.getSession();
+  const uid = sess?.session?.user?.id;
+  if (!uid) { S.weeklan.needsLogin = true; save(); return false; }
+  const from = new Date(Date.now() - 7 * 864e5).toISOString(), to = new Date(Date.now() + 45 * 864e5).toISOString();
+  const { data, error } = await sb.from('items').select('*').eq('user_id', uid).gte('due', from).lte('due', to).order('due', { ascending: true }).limit(400);
+  if (error) throw new Error('Couldn\'t read from Weeklan right now.');
+  const seen = new Set();
+  S.weeklan.items = (data || []).filter(r => { const k = (r.title || '') + '|' + r.due; if (seen.has(k)) return false; seen.add(k); return true; })
+    .map(r => ({ id: String(r.id), title: r.title || '', course: r.course || '', due: r.due, minutes: r.minutes || 0, kind: r.kind || 'work', done: !!r.done,
+      isTest: (r.is_test === null || r.is_test === undefined) ? (r.kind === 'work' && isTestTitle(r.title)) : !!r.is_test }));
+  S.weeklan.lastSync = Date.now(); S.weeklan.needsLogin = false; save();
+  return true;
+}
+async function weeklanDisconnect() {
+  try { (await weeklanClient()).auth.signOut(); } catch {}
+  S.weeklan = null; save();
+}
+const wkOn = () => !!S.weeklan?.connected;
+const wkDayKey = it => dayKey(new Date(it.due));
+/* upcoming schoolwork (not done, from today on) */
+function wkUpcoming(days = 14) {
+  if (!wkOn()) return [];
+  const now = new Date(); now.setHours(0, 0, 0, 0); const end = now.getTime() + days * 864e5;
+  return S.weeklan.items.filter(i => !i.done && i.kind !== 'event' && new Date(i.due).getTime() >= now.getTime() && new Date(i.due).getTime() < end);
+}
+const wkOn_day = k => wkOn() ? S.weeklan.items.filter(i => wkDayKey(i) === k && i.kind !== 'task') : [];
+function wkDueLabel(it) {
+  const d = new Date(it.due), today = dayKey(), k = dayKey(d);
+  const rel = k === today ? 'today' : k === addDays(today, 1) ? 'tomorrow' : d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  return rel;
+}
+function wkLine(it) {
+  return `${it.isTest ? 'TEST: ' : ''}${it.title}${it.course ? ' (' + it.course + ')' : ''} — due ${new Date(it.due).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}${it.minutes ? ', Weeklan estimate ~' + it.minutes + ' min' : ''}`;
+}
+function wkContext() {
+  const up = wkUpcoming(14);
+  if (!up.length) return wkOn() ? '\nWeeklan (their school calendar) shows nothing due in the next 2 weeks.' : '';
+  return '\nFrom their Weeklan school calendar, upcoming and not done yet:\n- ' + up.slice(0, 25).map(wkLine).join('\n- ') + '\nUse this when it helps (e.g. what to study, what matters today), but do not list it all back unless asked.';
+}
+function wkItemRow(it, withPlan = true) {
+  return `<div class="item"><span style="font-size:1.3rem">${it.isTest ? '📝' : it.kind === 'event' ? '📅' : '📚'}</span>
+    <div style="flex:1"><b>${esc(it.title)}</b>${it.isTest ? ' <span class="pill" style="background:var(--peach-soft)">test</span>' : ''}
+    <div class="small muted">${esc([it.course, 'due ' + wkDueLabel(it), it.minutes ? '~' + it.minutes + ' min' : ''].filter(Boolean).join(' · '))}</div></div>
+    ${withPlan && it.kind !== 'event' ? `<button class="btn sm quiet" data-wkplan="${esc(it.id)}">Plan it</button>` : ''}</div>`;
+}
+/* AI study plan: how much time each thing needs + sessions spread before the due date */
+async function studyPlan(targets, outEl) {
+  if (!targets.length) { toast('Nothing coming up to plan 🎉'); return; }
+  outEl.innerHTML = `<div class="card soft">${thinking('Working out how much time you need')}</div>`;
+  const today = dayKey();
+  const existing = S.planner.filter(p => p.date >= today && p.date <= addDays(today, 20)).map(p => `${p.date}${p.time ? ' ' + p.time : ''}: ${p.title}`).join('; ');
+  const energyByDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => { const xs = S.checkins.filter(c => new Date(c.t).getDay() === i).map(c => c.energy); return xs.length ? `${d} ${(xs.reduce((a, b) => a + b, 0) / xs.length).toFixed(1)}/5` : null; }).filter(Boolean).join(', ');
+  let r;
+  try {
+    r = await ai({ json: true,
+      prompt: `Today is ${today} (${new Date().toLocaleDateString([], { weekday: 'long' })}).\nPlan study time for:\n- ${targets.map(wkLine).join('\n- ')}\nAlready in my planner: ${existing || 'nothing'}\nUsual energy by weekday: ${energyByDay || 'unknown yet'}`,
+      task: `You are making a gentle study plan for a ${isKid() ? 'student' : 'person'} from their Weeklan assignments. For EACH item, estimate how many total minutes they realistically need (tests usually need more spread-out review: e.g. a quiz 45-90 min, a unit test 2-4 h, a final 5+ h; use the Weeklan estimate if given) and say why in a few words. Then schedule study sessions of 15-50 minutes on days BEFORE each due date (never after), spacing out test review over several days (spaced practice) and finishing small homework 1-2 days early when possible. Max ~2 hours of study per day, lighter on low-energy days, keep at least one easy day a week. Give each session a clear title like "Bio test: review chapter 4 flashcards". Times "HH:MM" only if helpful (after school is ~16:00-19:00). Return JSON exactly like: {"message":"one warm sentence","items":[{"title":"Biology test","minutesNeeded":180,"why":"few words"}],"sessions":[{"date":"YYYY-MM-DD","time":"16:30","title":"short","minutes":30}]}` });
+  } catch (e) {
+    if (e.message !== 'nokey') { outEl.innerHTML = `<div class="card soft">${aiErrorHtml(e)}</div>`; return; }
+    // simple built-in planner: split each item over the days before it is due
+    const sessions = []; const items = [];
+    targets.forEach(t => {
+      const need = t.minutes || (t.isTest ? 120 : 45); items.push({ title: t.title, minutesNeeded: need, why: t.isTest ? 'spread-out test review' : 'homework estimate' });
+      const dueK = wkDayKey(t); const daysLeft = Math.max(1, Math.round((new Date(dueK + 'T12:00:00') - new Date(today + 'T12:00:00')) / 864e5));
+      const n = Math.min(daysLeft, Math.max(1, Math.ceil(need / 40)));
+      for (let i = 0; i < n; i++) sessions.push({ date: addDays(dueK, -(n - i)), time: '', title: `${t.title}${n > 1 ? ' – part ' + (i + 1) : ''}`, minutes: Math.round(need / n) });
+    });
+    r = { message: 'Here\'s a simple split. (Connect the AI for a smarter plan.)', items, sessions };
+  }
+  const lastDue = targets.map(wkDayKey).sort().pop();
+  const sessions = (r.sessions || []).filter(s => s.title && /^\d{4}-\d{2}-\d{2}$/.test(s.date) && s.date >= today && s.date <= lastDue)
+    .map(s => ({ id: uid(), title: s.title + (s.minutes ? ` (${s.minutes} min)` : ''), date: s.date, time: /^\d{2}:\d{2}$/.test(s.time || '') ? s.time : '', cat: 'school', done: false, fromStudy: true }))
+    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+  const total = (r.items || []).reduce((a, i) => a + (+i.minutesNeeded || 0), 0);
+  outEl.innerHTML = `<div class="card soft"><div class="ai-tag">🌿 Moss</div><p>${esc(r.message || '')}</p>
+    ${(r.items || []).length ? `<h3>⏱️ Time you'll need</h3>${r.items.map(i => `<div class="item"><div style="flex:1"><b>${esc(i.title)}</b><div class="small muted">${esc(i.why || '')}</div></div><b>${fmtMin(+i.minutesNeeded || 0)}</b></div>`).join('')}
+      <p class="small"><b>Total: ${fmtMin(total)}</b> — spread out, so no single night is too much.</p>` : ''}
+    ${sessions.length ? `<h3 style="margin-top:12px">🗓️ Study sessions</h3>${sessions.map((s, i) => `<label class="item" style="cursor:pointer"><input type="checkbox" checked data-spick="${i}" style="width:22px;height:22px;margin-top:3px;accent-color:var(--brand)">
+      <div style="flex:1"><b>${esc(s.title)}</b><div class="small muted">${new Date(s.date + 'T12:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}${s.time ? ' · ' + fmt12(s.time) : ''}</div></div></label>`).join('')}
+      <button class="btn block" id="sadd" style="margin-top:10px">Add to my planner</button>` : ''}</div>`;
+  const btn = outEl.querySelector('#sadd');
+  if (btn) btn.onclick = () => { const picked = [...outEl.querySelectorAll('[data-spick]')].filter(c => c.checked).map(c => sessions[+c.dataset.spick]);
+    S.planner.push(...picked); save(); toast(`Added ${picked.length} study session${picked.length === 1 ? '' : 's'} 🌿`); btn.disabled = true; btn.textContent = 'Added to your planner ✓'; };
+}
+const fmtMin = m => m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ' ' + (m % 60) + ' min' : ''}` : `${m} min`;
+function bindWkPlan(root, outEl) {
+  $$('[data-wkplan]', root).forEach(b => b.onclick = () => { const it = S.weeklan.items.find(i => i.id === b.dataset.wkplan); if (it) { studyPlan([it], outEl()); outEl().scrollIntoView({ behavior: 'smooth' }); } });
+}
+function weeklanSettingsCard() {
+  if (!wkOn()) return `<div class="card"><h2>📅 Connect Weeklan</h2>
+    <p class="small muted">Sign in with your Weeklan account so Moss knows your assignments and tests, and can plan your study time. Softland only <b>reads</b> your Weeklan calendar — it never changes anything there.</p>
+    <label class="lbl" for="wke">Weeklan email</label><input type="text" id="wke" inputmode="email" autocomplete="username">
+    <label class="lbl" for="wkp">Weeklan password</label><input type="password" id="wkp" autocomplete="current-password">
+    <button class="btn block" id="wkgo" style="margin-top:12px">Connect Weeklan</button><p id="wkerr" class="small" style="color:#B5524F"></p></div>`;
+  return `<div class="card"><h2>📅 Weeklan <span class="pill">connected</span></h2>
+    <p class="small">Signed in as <b>${esc(S.weeklan.email || '')}</b>. ${S.weeklan.needsLogin ? '<b>Please sign in again.</b>' : `${wkUpcoming(14).length} things due in the next 2 weeks.`}<br><span class="muted">Last updated ${S.weeklan.lastSync ? new Date(S.weeklan.lastSync).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : 'never'} · read-only</span></p>
+    <div class="row"><button class="btn sm quiet" id="wksync">Update now</button><button class="btn sm quiet" id="wkoff">Disconnect</button></div></div>`;
+}
+function bindWeeklanSettings() {
+  const go = $('#wkgo');
+  if (go) go.onclick = async () => {
+    const e = $('#wke').value.trim(), p = $('#wkp').value;
+    if (!e || !p) { $('#wkerr').textContent = 'Enter your Weeklan email and password.'; return; }
+    go.disabled = true; go.textContent = 'Connecting…'; $('#wkerr').textContent = '';
+    try { await weeklanSignIn(e, p); toast('Weeklan connected 📅'); views.settings(); }
+    catch (err) { $('#wkerr').textContent = err.message; go.disabled = false; go.textContent = 'Connect Weeklan'; }
+  };
+  const sy = $('#wksync');
+  if (sy) sy.onclick = async () => { sy.disabled = true; sy.textContent = 'Updating…'; try { await weeklanSync(true); toast(S.weeklan.needsLogin ? 'Please reconnect Weeklan' : 'Weeklan updated ✓'); } catch (e) { toast(e.message); } views.settings(); };
+  const off = $('#wkoff');
+  if (off) off.onclick = async () => { if (confirm('Disconnect Weeklan? Your Weeklan account stays exactly the same.')) { await weeklanDisconnect(); views.settings(); } };
+}
+
 /* ----- Planner (gentle week planner) ----- */
 const CATS = { school: ['📚', 'School'], work: ['💼', 'Work'], home: ['🏠', 'Home'], fun: ['🎈', 'Fun'], health: ['🌱', 'Health'], other: ['✨', 'Other'] };
 const catList = () => Object.keys(CATS).filter(c => isKid() ? c !== 'work' : c !== 'school');
@@ -715,7 +866,7 @@ views.planner = () => {
     <div class="card"><div class="row between"><button class="btn sm quiet" id="pw" aria-label="Previous week">←</button>
       <b>${new Date(ws + 'T12:00:00').toLocaleDateString([], { month: 'short', day: 'numeric' })} – ${new Date(days[6] + 'T12:00:00').toLocaleDateString([], { month: 'short', day: 'numeric' })}</b>
       <button class="btn sm quiet" id="nw" aria-label="Next week">→</button></div>
-      <div class="week">${days.map(k => { const d = new Date(k + 'T12:00:00'); const n = plansOn(k).length;
+      <div class="week">${days.map(k => { const d = new Date(k + 'T12:00:00'); const n = plansOn(k).length + wkOn_day(k).length;
         return `<button data-day="${k}" class="${k === sel ? 'on' : ''} ${k === today ? 'today' : ''}"><small>${d.toLocaleDateString([], { weekday: 'narrow' })}</small><b>${d.getDate()}</b><i>${n ? '•'.repeat(Math.min(n, 3)) : '&nbsp;'}</i></button>`; }).join('')}</div>
       ${sel !== today ? '<div class="center"><button class="btn sm quiet" id="ptoday" style="margin-top:8px">Back to today</button></div>' : ''}</div>
     ${open.length ? `<div class="card peach"><h3>🍃 Still open from earlier</h3><p class="small" style="margin-top:0">No big deal. Move what still matters, let go of what doesn't.</p>
@@ -725,6 +876,7 @@ views.planner = () => {
       ${items.length ? items.map(p => `<div class="item"><button class="check ${p.done ? 'on' : ''}" data-pdone="${p.id}" aria-label="Mark done">${p.done ? '✓' : ''}</button>
         <div style="flex:1"><div class="${p.done ? 'done-txt' : ''}"><b>${esc(p.title)}</b></div><div class="small muted">${p.time ? fmt12(p.time) + ' · ' : ''}${CATS[p.cat]?.[0] || ''} ${CATS[p.cat]?.[1] || ''}</div></div>
         <button class="mini-btn" data-pedit="${p.id}" aria-label="Edit">✎</button></div>`).join('') : `<p class="muted">Nothing planned${sel < today ? '' : ' yet — and that\'s okay'}.</p>`}
+      ${wkOn_day(sel).length ? `<div style="margin-top:8px"><div class="small muted" style="font-weight:700">📅 Due in Weeklan</div>${wkOn_day(sel).map(i => `<div class="item"><span>${i.done ? '✅' : i.isTest ? '📝' : i.kind === 'event' ? '📅' : '📚'}</span><div style="flex:1" class="${i.done ? 'done-txt' : ''}"><b>${esc(i.title)}</b><div class="small muted">${esc([i.course, new Date(i.due).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })].filter(Boolean).join(' · '))}</div></div></div>`).join('')}</div>` : ''}
       <button class="btn block" id="padd" style="margin-top:10px">+ Add a plan</button></div>
     <div class="card lilac"><h3>🪄 Help me plan my week</h3><p class="small" style="margin-top:0">Dump everything coming up — tests, deadlines, chores, fun stuff. Moss spreads it out gently, putting harder things on your better-energy days.</p>
       <div class="inputmic"><textarea id="pdump" placeholder="${isKid() ? 'science test Thursday, book report due Friday, soccer Tue & Thu, clean room' : 'report due Wed, gym 3x, groceries, call landlord, dinner with Jo Fri'}"></textarea>${micBtn('pdump')}</div>
@@ -746,7 +898,7 @@ views.planner = () => {
     const energyByDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => { const xs = S.checkins.filter(c => new Date(c.t).getDay() === i).map(c => c.energy); return xs.length ? `${d} ${(xs.reduce((a, b) => a + b, 0) / xs.length).toFixed(1)}/5` : null; }).filter(Boolean).join(', ');
     let r;
     try {
-      r = await ai({ json: true, prompt: `Today is ${today} (${new Date().toLocaleDateString([], { weekday: 'long' })}). Things coming up:\n${txt}\nAlready planned: ${existing || 'nothing'}\nUsual energy by weekday: ${energyByDay || 'unknown yet'}`,
+      r = await ai({ json: true, prompt: `Today is ${today} (${new Date().toLocaleDateString([], { weekday: 'long' })}). Things coming up:\n${txt}\nAlready planned: ${existing || 'nothing'}${wkOn() ? '\nAlso due in their Weeklan school calendar (fixed due dates, do not move them; plan prep before them):\n- ' + (wkUpcoming(14).map(wkLine).join('\n- ') || 'nothing') : ''}\nUsual energy by weekday: ${energyByDay || 'unknown yet'}`,
         task: `Turn the user's list into a gentle plan over the next 14 days. Fixed events (a test on Thursday, soccer Tue) go on their real day. For deadlines, add 1-3 small prep sessions on earlier days (e.g. "Study for science test – part 1"), never cramming everything the night before. Put harder work on higher-energy days, keep at most ~3 plans per day, and leave some days light. Use dates "YYYY-MM-DD", optional "HH:MM" time only if known or helpful, and cat from: ${catList().join(', ')}. Return JSON exactly like: {"message":"one warm sentence","plans":[{"title":"short","date":"2026-01-01","time":"","cat":"${isKid() ? 'school' : 'work'}"}]}` });
     } catch (e) {
       if (e.message !== 'nokey') { out.innerHTML = `<div style="margin-top:12px">${aiErrorHtml(e)}</div>`; return; }
@@ -1043,6 +1195,9 @@ views.focus = () => {
       <p class="muted">${isKid() ? 'Study tips matched to your energy. Small steps, no cramming guilt.' : 'For work that followed you home — or planning tomorrow\'s, then switching off.'}</p>
       <div class="card"><label class="lbl" style="margin-top:0">My energy right now</label>
       <div class="chips">${[['high', '⚡ High'], ['med', '🙂 Medium'], ['low', '🪫 Low']].map(([k, l]) => `<button class="chip ${level === k ? 'on' : ''}" data-lv="${k}">${l}</button>`).join('')}</div></div>
+      ${wkOn() ? `<div class="card"><div class="row between"><h3 style="margin:0">📅 From Weeklan</h3><span class="small muted">next 2 weeks</span></div>
+        ${wkUpcoming(14).length ? wkUpcoming(14).map(i => wkItemRow(i)).join('') + '<button class="btn block" id="wkall" style="margin-top:10px">🗓️ Make my study plan</button>' : '<p class="muted" style="margin-bottom:0">Nothing due in the next 2 weeks 🎉</p>'}</div><div id="wkout"></div>`
+        : (isKid() ? '<a class="card lilac row between" href="#settings" style="text-decoration:none;color:inherit"><span><b>📅 Connect Weeklan</b><br><span class="small muted">See your assignments here and get a study plan with how much time each one needs.</span></span><span>→</span></a>' : '')}
       <div class="card soft"><h2>${m.name}</h2><ul>${m.tips.map(t => `<li>${t}</li>`).join('')}</ul>
       <button class="btn sm" id="sprint">▶︎ Start a ${m.minutes}-minute session</button></div>
       <div class="card"><h3>${isKid() ? 'Break down an assignment' : 'Break down a task'}</h3>
@@ -1052,6 +1207,8 @@ views.focus = () => {
       <div id="out">${last?.result ? breakdownHtml(last.result) : ''}</div></div>`;
     bindMics();
     $$('[data-lv]').forEach(b => b.onclick = () => { level = b.dataset.lv; draw(); });
+    $('#wkall') && ($('#wkall').onclick = () => studyPlan(wkUpcoming(14).filter(i => i.kind !== 'event'), $('#wkout')));
+    bindWkPlan(app, () => $('#wkout'));
     $('#sprint').onclick = () => timerOverlay({ title: m.name, minutes: m.minutes, steps: m.tips, note: 'One thing at a time. Breaks are part of it.' });
     bindBreakdown();
     $('#brk').onclick = async () => {
@@ -1224,6 +1381,7 @@ views.settings = () => {
       <label class="switch"><span>🔔 Soft reminders<br><small class="muted">"How are you?" at arrival time, and a screens-off nudge. Works while Softland is open or installed.</small></span><input type="checkbox" id="snudge" ${st.nudges ? 'checked' : ''}></label>
       <label class="lbl">Theme</label><div class="chips">${[['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']].map(([k, l]) => `<button class="chip ${st.theme === k ? 'on' : ''}" data-th="${k}">${l}</button>`).join('')}</div>
       <p class="small muted" style="margin-top:12px">📱 Tip: add Softland to your home screen (Share → "Add to Home Screen" on iPhone, or the install option in your browser menu) so it's one tap away when you get home.</p></div>
+    ${weeklanSettingsCard()}
     <div class="card"><h2>Sharing <span class="pill">off by default</span></h2>
       <p class="small muted">Sharing never includes journal entries or private notes.</p>
       <label class="switch"><span>🤝 Optional buddy — share a one-line daily check-in with one trusted person</span><input type="checkbox" id="sbuddy" ${st.buddy.on ? 'checked' : ''}></label>
@@ -1243,6 +1401,7 @@ views.settings = () => {
   $$('[data-t]').forEach(b => b.onclick = () => { persist(); p.type = b.dataset.t; save(); views.settings(); });
   $$('[data-th]').forEach(b => b.onclick = () => { st.theme = b.dataset.th; save(); applyTheme(); views.settings(); });
   $('#sbuddy').addEventListener('change', () => $('#bname').hidden = !$('#sbuddy').checked);
+  bindWeeklanSettings();
   $('#eye').onclick = () => { const k = $('#skey'); k.type = k.type === 'password' ? 'text' : 'password'; };
   $('#snudge').onchange = async e => {
     if (e.target.checked && 'Notification' in window && Notification.permission !== 'granted') {
@@ -1290,6 +1449,7 @@ $$('#tabs button').forEach(b => b.onclick = () => { if (location.hash === '#' + 
 $('#fab').onclick = overwhelm;
 window.addEventListener('hashchange', route);
 route();
+if (S.weeklan?.connected) weeklanSync(false).then(ch => { if (ch && !document.querySelector('.overlay,.sheet-bg')) route(); }).catch(() => {});
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>

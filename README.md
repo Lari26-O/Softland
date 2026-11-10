@@ -22,6 +22,7 @@ It's one static `index.html`, with no build step.
 |---|---|
 | Land | Arrival ritual, energy and mood check-in, one calm suggestion, energy patterns over time |
 | Planner | Week view, add plans with optional time and category, "Help me plan my week" spreads deadlines out by energy, gentle carry-over for unfinished plans |
+| Weeklan | Sign in with your Weeklan account (read-only). Moss knows what's due, "Make my study plan" estimates how much time each assignment or test needs and schedules study sessions before the due date, and assignments show on Land, Planner, Today and the Study helper |
 | Today | Brain dump → 1–3 priorities, everything else optional |
 | Tomorrow | Soft plan with wake / bed / screens-off times (sleep-back), draggable blocks |
 | Journal | Three good things / one lesson / let go; text, voice or photo; Moss asks follow-ups |
