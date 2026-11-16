@@ -2,7 +2,7 @@
  * Softland AI server (Cloudflare Worker).
  * Holds the API keys as secrets so everyone can use the app without their own key.
  * Tries providers in order and falls back to the next one if a provider fails or hits its limit:
- *   1. Google Gemini   (secret: GEMINI_API_KEY)
+ *   1. Google Gemini   (secret: GEMINI_API_KEY — any secret name containing GEMINI works)
  *   2. Groq            (secret: GROQ_API_KEY)
  *   3. OpenRouter      (secret: OPENROUTER_API_KEY)
  * Any provider without a key is skipped.
@@ -71,9 +71,21 @@ export default {
   }
 };
 
+// Finds a key even if the secret was given a slightly different name,
+// e.g. GROQ_API_SOFTLAND or GEMINI_SOFTLAND_API (any name containing the provider).
+function findKey(env, word) {
+  for (const [name, value] of Object.entries(env)) {
+    const n = name.toUpperCase();
+    if (typeof value === 'string' && value.trim() && n.includes(word) && !n.includes('MODEL')) return value.trim();
+  }
+  return '';
+}
+
 function providers(env) {
+  env = { ...env, GEMINI_API_KEY: findKey(env, 'GEMINI'), GROQ_API_KEY: findKey(env, 'GROQ'), OPENROUTER_API_KEY: findKey(env, 'OPENROUTER') };
   const out = [];
-  if (env.GEMINI_API_KEY) out.push({ name: 'gemini', call: a => gemini(env, a) });
+  const e2 = env;
+  if (env.GEMINI_API_KEY) out.push({ name: 'gemini', call: a => gemini(e2, a) });
   if (env.GROQ_API_KEY) out.push({ name: 'groq', call: a => openaiStyle('https://api.groq.com/openai/v1/chat/completions', env.GROQ_API_KEY, env.GROQ_MODEL || 'llama-3.3-70b-versatile', a) });
   if (env.OPENROUTER_API_KEY) out.push({ name: 'openrouter', call: a => openaiStyle('https://openrouter.ai/api/v1/chat/completions', env.OPENROUTER_API_KEY, env.OPENROUTER_MODEL || 'openrouter/free', a, { 'HTTP-Referer': 'https://lari26-o.github.io/Softland/', 'X-Title': 'Softland' }) });
   return out;

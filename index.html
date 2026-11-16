@@ -372,7 +372,7 @@ class AIError extends Error {}
 /* Shared Softland AI server (Cloudflare Worker in /server). It holds the keys and
    falls back Gemini -> Groq -> OpenRouter, so nobody needs their own key.
    Paste the Worker's URL here once it's deployed. */
-const AI_SERVER = '';
+const AI_SERVER = 'https://softland-ai.larissapdeoliveira.workers.dev';
 const serverUrl = () => (S.settings.serverUrl || AI_SERVER || '').trim().replace(/\/+$/, '');
 const parseJson = text => {
   try { return JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, '')); }
