@@ -1,0 +1,3 @@
+# Cloudflare Pages: always check for the newest version of the app
+/*
+  Cache-Control: no-cache
