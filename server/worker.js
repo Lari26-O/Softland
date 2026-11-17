@@ -22,7 +22,9 @@ export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
     const allowed = (env.ALLOWED_ORIGINS || DEFAULT_ORIGINS).split(',').map(s => s.trim()).filter(Boolean);
-    const okOrigin = allowed.includes(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin);
+    // also allow Softland on Cloudflare Pages (softland.pages.dev, softland-xyz.pages.dev and preview links)
+    const okOrigin = allowed.includes(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin)
+      || /^https:\/\/([a-z0-9-]+\.)?softland[a-z0-9-]*\.pages\.dev$/.test(origin);
     const cors = {
       'Access-Control-Allow-Origin': okOrigin ? origin : allowed[0],
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
